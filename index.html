@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Taller Conectado — Kilómetro 0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    var d = document.documentElement;
+    d.classList.add('js');
+    d.dataset.theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  })();
+</script>
+<style>
+  :root {
+    --bg: #E8E9E6; --ink: #1B222A; --muted: #5F6873; --line: rgba(27,34,42,.18);
+    --signal: #A97B00; --signal-bright: #E4A800; --reel: #12181F; --reel-digit: #F3F4F1;
+    --panel: #F7F7F4; --panel-2: #FFFFFF;
+    --ok: #2E7D4F; --warn: #B96A00; --bad: #B3261E;
+    --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  }
+  [data-theme="dark"] {
+    --bg: #151C24; --ink: #E9ECEF; --muted: #98A2AD; --line: rgba(233,236,239,.2);
+    --signal: #E4A800; --signal-bright: #F0B722; --reel: #0B1015; --reel-digit: #F3F4F1;
+    --panel: #1C2530; --panel-2: #232E3A;
+    --ok: #5CC48A; --warn: #F0B722; --bad: #F08A80;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4, p, ul, ol, dl, figure { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  a { color: inherit; }
+  button, input, select, textarea { font-family: var(--font); color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--signal-bright); outline-offset: 2px; }
+
+  /* Cabecera y pestañas */
+  .top { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1320px; margin: 0 auto; padding: 0 clamp(14px, 3vw, 32px); display: flex; align-items: center; gap: 18px; height: 60px; }
+  .brand { font-weight: 800; font-stretch: 90%; letter-spacing: -.01em; font-size: 1.15rem; white-space: nowrap; }
+  .brand small { display: block; font-weight: 400; font-stretch: 100%; font-size: .78rem; color: var(--muted); letter-spacing: 0; }
+  .tabs { display: flex; gap: 2px; overflow-x: auto; margin-left: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { background: transparent; border: 0; border-bottom: 3px solid transparent; padding: 18px 12px 15px; font-size: .95rem; color: var(--muted); white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.is-active { color: var(--ink); border-bottom-color: var(--signal-bright); font-weight: 600; }
+  .theme-btn { border: 1px solid var(--line); background: transparent; border-radius: 4px; padding: 7px 12px; font-size: .85rem; white-space: nowrap; }
+  .theme-btn:hover { border-color: var(--ink); }
+
+  main { max-width: 1320px; margin: 0 auto; padding: 24px clamp(14px, 3vw, 32px) 80px; }
+  .tab { display: none; }
+  .tab.is-active { display: block; }
+  .muted { color: var(--muted); }
+
+  /* ===== Presentación: escenario 16:9 con unidades de contenedor ===== */
+  .stage-wrap { display: flex; flex-direction: column; align-items: center; }
+  .stage { position: relative; container-type: inline-size; aspect-ratio: 16 / 9; width: min(100%, calc((100vh - 170px) * 16 / 9)); background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+  .stage:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; border: 0; }
+  .slide { position: absolute; inset: 0; padding: 5cqw 7cqw 9cqw; display: flex; flex-direction: column; justify-content: center; }
+  .slide:not(.is-active) { display: none; }
+  .slide.is-active { animation: appear .25s ease-out; }
+  @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+  .h { font-size: 4.3cqw; font-weight: 700; font-stretch: 96%; line-height: 1.08; letter-spacing: -.012em; max-width: 24ch; }
+  .lead { margin-top: 1.6cqw; font-size: 2.3cqw; max-width: 34ch; }
+  .slide h3 { font-size: 1.8cqw; font-weight: 700; margin-bottom: .8cqw; }
+  .dash > li { position: relative; padding-left: 2.6cqw; margin-top: 1cqw; font-size: 1.75cqw; }
+  .dash > li::before { content: ""; position: absolute; left: 0; top: .72em; width: 1.4cqw; height: .18cqw; background: var(--signal-bright); }
+  .foot { margin-top: 3.6cqw; font-size: 1.75cqw; max-width: 44ch; }
+  .foot.strong { font-weight: 600; font-size: 2.1cqw; max-width: 40ch; }
+  .cover { display: grid; grid-template-columns: 1.4fr 1fr; align-items: center; gap: 5cqw; }
+  .cover-title { font-size: 7.5cqw; font-weight: 800; font-stretch: 90%; line-height: .98; letter-spacing: -.02em; }
+  .cover-sub { margin-top: 2cqw; font-size: 2.2cqw; max-width: 30ch; }
+  .cover-sig { margin-top: 3.2cqw; font-size: 1.45cqw; color: var(--muted); line-height: 1.5; }
+  .odo { display: flex; flex-direction: column; align-items: center; gap: 1cqw; justify-self: end; }
+  .odo-window { font-size: 15cqw; font-weight: 800; font-stretch: 78%; font-variant-numeric: tabular-nums; line-height: 1.15; height: 1.15em; width: .9em; overflow: hidden; background: var(--reel); color: var(--reel-digit); border-radius: .06em; box-shadow: inset 0 .1em .2em rgba(0,0,0,.7), inset 0 -.08em .16em rgba(0,0,0,.55); position: relative; }
+  .odo-window::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(255,255,255,.08); }
+  .odo-strip { display: flex; flex-direction: column; align-items: center; animation: roll 1.8s cubic-bezier(.16,.84,.3,1) .35s forwards; }
+  .odo-strip span { display: block; height: 1.15em; }
+  @keyframes roll { from { transform: translateY(0); } to { transform: translateY(-10.35em); } }
+  .odo-label { font-size: 1.4cqw; color: var(--muted); }
+  .hint { position: absolute; left: 7cqw; bottom: 7.2cqw; font-size: 1.15cqw; color: var(--muted); max-width: 60ch; }
+  .chain { margin-top: 4cqw; display: flex; flex-wrap: wrap; align-items: center; gap: 1.2cqw 1cqw; font-size: 1.6cqw; }
+  .chain li { padding: 1cqw 1.6cqw; border: .2cqw solid var(--ink); border-radius: .4cqw; }
+  .chain li + li::before { content: "→"; color: var(--signal-bright); font-weight: 700; margin-right: 1cqw; margin-left: -.4cqw; }
+  .reels { margin-top: 3cqw; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqw; }
+  .reel { display: flex; flex-direction: column; gap: .8cqw; }
+  .reel-label { font-size: 1.4cqw; color: var(--muted); min-height: 2.6em; }
+  .reel input { width: 100%; min-width: 0; background: var(--reel); color: var(--reel-digit); border: 0; border-radius: .6cqw; padding: .12em .2em; font-size: 5cqw; font-weight: 800; font-stretch: 80%; font-variant-numeric: tabular-nums; letter-spacing: .04em; text-align: center; box-shadow: inset 0 .16em .36em rgba(0,0,0,.7), inset 0 -.12em .3em rgba(0,0,0,.5); }
+  .reel input::placeholder { color: rgba(243,244,241,.35); }
+  .derived { margin-top: 2.2cqw; font-size: 1.9cqw; font-weight: 600; max-width: 60ch; }
+  .derived.is-empty { color: var(--muted); font-weight: 400; max-width: 46ch; }
+  .impact { margin-top: 2cqw; border-top: .2cqw solid var(--signal-bright); padding-top: 1.4cqw; }
+  .impact[hidden] { display: none; }
+  .impact-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1cqw 3cqw; font-size: 1.5cqw; }
+  .impact-head b { font-weight: 800; }
+  .impact-slider { display: flex; align-items: center; gap: 1cqw; font-size: 1.4cqw; font-weight: 700; white-space: nowrap; }
+  .impact-slider input { width: 16cqw; accent-color: var(--signal-bright); }
+  .impact-grid { margin-top: 1.4cqw; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqw; }
+  .impact-grid .n { font-size: 3.6cqw; font-weight: 800; font-stretch: 82%; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -.01em; }
+  .impact-grid .l { font-size: 1.3cqw; color: var(--muted); margin-top: .6cqw; max-width: 22ch; }
+  .impact-note { margin-top: 1.4cqw; font-size: 1.3cqw; color: var(--muted); max-width: 70ch; }
+  .impact-note b { color: var(--ink); font-weight: 800; }
+  .slide-market { padding-top: 3.4cqw; justify-content: flex-start; }
+  .slide-market .h { font-size: 3.5cqw; max-width: 46ch; }
+  .slide-market .cols { margin-top: 2.2cqw; }
+  .slide-market .col h3 { font-size: 1.6cqw; margin-bottom: .7cqw; }
+  .slide-market .cols.three .dash > li { font-size: 1.35cqw; margin-top: .6cqw; }
+  .slide-market .cols.three .col-note { font-size: 1.2cqw; margin-top: 1cqw; }
+  .slide-market .foot.strong { margin-top: 2.4cqw; font-size: 1.9cqw; max-width: 52ch; }
+  .slide-dense { padding-top: 3.2cqw; justify-content: flex-start; }
+  .slide-dense .h { font-size: 3.8cqw; }
+  .slide-dense .reels { margin-top: 2cqw; gap: 2.4cqw; }
+  .slide-dense .reel-label { font-size: 1.25cqw; min-height: 2.4em; }
+  .slide-dense .reel input { font-size: 4.3cqw; }
+  .slide-dense .derived { margin-top: 1.5cqw; font-size: 1.7cqw; }
+  .slide-dense .impact { margin-top: 1.4cqw; padding-top: 1.1cqw; }
+  .slide-dense .impact-grid { margin-top: 1.1cqw; }
+  .slide-dense .impact-grid .n { font-size: 3.2cqw; }
+  .slide-dense .impact-note { margin-top: 1.1cqw; font-size: 1.2cqw; }
+  .cols { margin-top: 3cqw; display: grid; grid-template-columns: 1fr 1fr; gap: 5cqw; }
+  .cols.three { grid-template-columns: 1fr 1.5fr 1fr; gap: 3.4cqw; }
+  .col { border-top: .2cqw solid var(--ink); padding-top: 1.4cqw; }
+  .col p { font-size: 1.6cqw; }
+  .cols.three .dash > li { font-size: 1.45cqw; margin-top: .7cqw; padding-left: 2.2cqw; }
+  .cols.three .dash > li::before { width: 1.2cqw; }
+  .cols.three .col-note { font-size: 1.3cqw; margin-top: 1.2cqw; }
+  .arch { width: 100%; height: auto; margin-top: 2cqw; display: block; }
+  .arch .box { fill: none; stroke: var(--ink); stroke-width: 2; }
+  .arch .core { fill: var(--reel); }
+  .arch .second { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 7 7; }
+  .arch text { fill: var(--ink); font-family: var(--font); font-size: 21px; }
+  .arch .t-strong { font-weight: 700; font-size: 24px; }
+  .arch .t-muted { fill: var(--muted); font-size: 18px; }
+  .arch .t-core { fill: var(--reel-digit); }
+  .arch .t-core-muted { fill: rgba(243,244,241,.7); font-size: 18px; }
+  .arch .link { stroke: var(--ink); stroke-width: 2; fill: none; marker-end: url(#arrow); marker-start: url(#arrow-back); }
+  .arch .link-dash { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 7 7; fill: none; }
+  .arch .head { fill: var(--ink); }
+  .trio { margin-top: 3cqw; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.4cqw; }
+  .trio > div { border-top: .2cqw solid var(--signal-bright); padding-top: 1.2cqw; }
+  .trio p { font-size: 1.55cqw; }
+  .btn-row { margin-top: 3cqw; display: flex; align-items: center; gap: 1.6cqw; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 1.1cqw 2cqw; background: var(--signal-bright); color: #12181F; text-decoration: none; font-weight: 700; font-size: 1.5cqw; border-radius: .4cqw; border: 0; }
+  .btn-row small { color: var(--muted); font-size: 1.15cqw; }
+  .timeline { margin-top: 3.6cqw; display: flex; justify-content: space-between; position: relative; }
+  .timeline::before { content: ""; position: absolute; left: .9cqw; right: calc(16.666% - .9cqw); top: .8cqw; height: .18cqw; background: var(--line); }
+  .timeline li { position: relative; padding-top: 2.6cqw; font-size: 1.6cqw; font-weight: 600; flex: 1; }
+  .timeline li::before { content: ""; position: absolute; left: 0; top: 0; width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: var(--bg); border: .18cqw solid var(--ink); }
+  .timeline li.now::before { background: var(--signal-bright); border-color: var(--signal-bright); }
+  .timeline li small { display: block; font-weight: 400; color: var(--muted); font-size: .85em; }
+  .phases { margin-top: 3cqw; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 3.4cqw; }
+  .phases > div { border-top: .2cqw solid var(--ink); padding-top: 1.1cqw; }
+  .phases p { font-size: 1.55cqw; }
+  .phases p + p { margin-top: .5cqw; }
+  .risks { margin-top: 2.4cqw; display: grid; grid-template-columns: 1fr 1.5fr; column-gap: 3.4cqw; }
+  .risks dt, .risks dd { border-top: 1px solid var(--line); padding: 1.1cqw 0; font-size: 1.55cqw; }
+  .risks dt { font-weight: 700; }
+  .risks dd { margin: 0; }
+  .costs { margin-top: 3cqw; }
+  .costs li { border-top: 1px solid var(--line); padding: 1.3cqw 0; font-size: 1.8cqw; display: grid; grid-template-columns: 1fr 1.6fr; gap: 2cqw; }
+  .costs li span:first-child { font-weight: 700; }
+  .costs li span:last-child { color: var(--muted); }
+  .close-line { margin-top: 3.6cqw; font-size: 3cqw; font-weight: 700; font-stretch: 96%; line-height: 1.15; max-width: 26ch; }
+  .deck-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6cqw; padding: 0 3cqw; display: flex; align-items: center; justify-content: space-between; font-size: 1.3cqw; color: var(--muted); background: var(--bg); border-top: 1px solid var(--line); }
+  .deck-actions { display: flex; align-items: center; gap: .8cqw; }
+  .deck-bar button { font-size: 1.25cqw; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: .4cqw; padding: .55cqw 1.1cqw; }
+  .deck-bar button:hover { border-color: var(--ink); }
+  .deck-bar .nav { font-size: 1.7cqw; line-height: 1; padding: .3cqw 1.1cqw .5cqw; }
+  .counter { font-variant-numeric: tabular-nums; color: var(--ink); min-width: 5ch; text-align: center; }
+  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: .35cqw; }
+  .progress-bar { height: 100%; width: 0; background: var(--signal-bright); transition: width .25s ease; }
+  .deck-notes { width: min(100%, calc((100vh - 170px) * 16 / 9)); margin-top: 14px; border: 1px solid var(--line); background: var(--panel); padding: 16px 20px; display: none; line-height: 1.55; }
+  .deck-notes.is-open { display: block; }
+  .deck-notes .notes-title { color: var(--muted); font-size: .85rem; margin-bottom: 10px; }
+  .deck-notes p + p { margin-top: 10px; }
+  .deck-help { margin-top: 12px; font-size: .85rem; color: var(--muted); text-align: center; }
+
+  /* ===== Secciones de contenido (Investigación, Arquitectura) ===== */
+  .page-title { font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 700; font-stretch: 96%; letter-spacing: -.01em; line-height: 1.1; max-width: 30ch; }
+  .page-lead { margin-top: 12px; font-size: 1.1rem; max-width: 70ch; color: var(--muted); }
+  .section { margin-top: 44px; }
+  .section h2 { font-size: clamp(1.35rem, 2.2vw, 1.75rem); font-weight: 700; font-stretch: 96%; margin-bottom: 14px; }
+  .section h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+  .prose p { max-width: 72ch; }
+  .prose p + p { margin-top: 10px; }
+  .matrix { width: 100%; border-collapse: collapse; font-size: .93rem; margin-top: 8px; }
+  .matrix th { text-align: left; border-bottom: 2px solid var(--ink); padding: 10px 8px; font-weight: 700; }
+  .matrix td { border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; }
+  .matrix td:first-child { font-weight: 600; }
+  .fase { display: inline-block; padding: 2px 9px; border-radius: 3px; font-weight: 700; font-size: .78rem; white-space: nowrap; }
+  .fase-1 { background: var(--signal-bright); color: #12181F; }
+  .fase-2 { border: 1.5px solid var(--ink); }
+  .fase-3 { border: 1.5px solid var(--muted); color: var(--muted); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .block { border-top: 2px solid var(--ink); padding-top: 12px; }
+  .block p, .block li { font-size: .98rem; }
+  .rule { border-left: 4px solid var(--signal-bright); background: var(--panel); padding: 12px 16px; margin-top: 10px; font-size: .98rem; }
+  .rule b { font-weight: 800; letter-spacing: .02em; }
+  .players li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: .95rem; display: grid; grid-template-columns: 180px 1fr; gap: 16px; }
+  .players li span:first-child { font-weight: 700; }
+  .sources li { font-size: .9rem; color: var(--muted); margin-top: 6px; }
+  .sources a { color: var(--ink); }
+  .diagram { width: 100%; height: auto; display: block; margin-top: 8px; }
+  .diagram text { font-family: var(--font); fill: var(--ink); font-size: 15px; }
+  .diagram .t-b { font-weight: 700; font-size: 16px; }
+  .diagram .t-m { fill: var(--muted); font-size: 13px; }
+  .diagram .t-w { fill: var(--reel-digit); }
+  .diagram .t-wm { fill: rgba(243,244,241,.7); font-size: 13px; }
+  .diagram .bx { fill: var(--panel); stroke: var(--ink); stroke-width: 1.6; }
+  .diagram .bx-dark { fill: var(--reel); stroke: none; }
+  .diagram .bx-amber { fill: var(--signal-bright); stroke: none; }
+  .diagram .bx-dash { fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-dasharray: 6 6; }
+  .diagram .ln { stroke: var(--ink); stroke-width: 1.6; fill: none; marker-end: url(#ah); }
+  .diagram .ln-m { stroke: var(--muted); stroke-width: 1.4; fill: none; stroke-dasharray: 5 5; marker-end: url(#ahm); }
+  .diagram .hd { fill: var(--ink); }
+  .diagram .hdm { fill: var(--muted); }
+  .diagram .step { fill: var(--signal-bright); }
+  .diagram .step-n { fill: #12181F; font-weight: 800; font-size: 14px; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .swatch { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: .85rem; }
+  .swatch div { height: 56px; }
+  .swatch span { display: block; padding: 8px 10px; }
+  .type-sample { border-top: 1px solid var(--line); padding: 12px 0; display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: baseline; }
+  .comp-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+  /* ===== Demos ===== */
+  .demo-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+  .demo-layout { display: grid; grid-template-columns: 400px 1fr; gap: 32px; align-items: start; }
+  .phone { width: 380px; height: 780px; margin: 0 auto; border-radius: 44px; border: 11px solid var(--reel); background: var(--panel-2); overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,.28); display: flex; flex-direction: column; }
+  .phone-notch { height: 30px; background: var(--reel); flex: 0 0 auto; }
+  .screen { flex: 1; overflow: auto; padding: 14px 16px 18px; }
+  .app-nav { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); background: var(--panel-2); }
+  .app-nav button { background: transparent; border: 0; padding: 12px 4px 14px; font-size: .78rem; color: var(--muted); }
+  .app-nav button.is-active { color: var(--ink); font-weight: 700; box-shadow: inset 0 3px 0 var(--signal-bright); }
+  .app-view { display: none; }
+  .app-view.is-active { display: block; }
+  .greet { font-size: 1.35rem; font-weight: 800; font-stretch: 92%; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 13px 14px; background: var(--panel); margin-top: 12px; }
+  .card h4 { font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .card .big { font-size: 1.25rem; font-weight: 700; }
+  .card .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .st { font-weight: 700; }
+  .st-ok { color: var(--ok); } .st-warn { color: var(--warn); } .st-bad { color: var(--bad); }
+  .bar-ok { border-left: 4px solid var(--ok); } .bar-warn { border-left: 4px solid var(--warn); } .bar-bad { border-left: 4px solid var(--bad); }
+  .plate { display: inline-block; white-space: nowrap; font-weight: 800; letter-spacing: .12em; font-variant-numeric: tabular-nums; border: 2px solid var(--ink); border-radius: 4px; padding: 2px 8px; font-size: .95rem; }
+  .cta { display: inline-block; border: 0; border-radius: 8px; padding: 10px 14px; font-weight: 700; font-size: .9rem; background: var(--signal-bright); color: #12181F; }
+  .cta.ghost { background: transparent; border: 1.5px solid var(--ink); color: var(--ink); }
+  .cta.small { padding: 7px 11px; font-size: .82rem; }
+  .cta:disabled { opacity: .45; cursor: default; }
+  .field { margin-top: 10px; }
+  .field label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 4px; }
+  .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; font-size: .95rem; background: var(--panel-2); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chip { border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 6px 12px; font-size: .85rem; }
+  .chip.is-on { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+  .list-item { padding: 11px 0; border-bottom: 1px solid var(--line); font-size: .92rem; }
+  .list-item small { display: block; color: var(--muted); font-size: .8rem; margin-top: 2px; }
+  .notif { padding: 10px 12px; border-radius: 8px; background: var(--panel); margin-top: 10px; font-size: .9rem; border: 1px solid var(--line); }
+  .notif small { display: block; color: var(--muted); font-size: .78rem; margin-top: 4px; }
+  .notif.is-new { border-color: var(--signal-bright); }
+  .explain { font-size: .95rem; }
+  .explain h3 { font-size: 1.05rem; margin-bottom: 8px; }
+  .explain ol { counter-reset: n; }
+  .explain ol li { counter-increment: n; position: relative; padding-left: 34px; margin-top: 10px; }
+  .explain ol li::before { content: counter(n); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--signal-bright); color: #12181F; font-weight: 800; font-size: .8rem; display: flex; align-items: center; justify-content: center; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .kpi { border-top: 2px solid var(--ink); padding-top: 10px; }
+  .kpi .n { font-size: 1.9rem; font-weight: 800; font-stretch: 85%; font-variant-numeric: tabular-nums; line-height: 1; }
+  .kpi .l { font-size: .85rem; color: var(--muted); margin-top: 6px; }
+  .panel { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 18px; }
+  .panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+  .cita { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: .93rem; }
+  .cita .time { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .cita small { display: block; color: var(--muted); font-size: .8rem; }
+  .cita.is-open { background: var(--panel-2); margin: 0 -18px; padding: 12px 18px; }
+  .tag { display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 3px; border: 1.5px solid var(--line); color: var(--muted); }
+  .tag.amber { background: var(--signal-bright); color: #12181F; border-color: transparent; }
+  .tag.ok { border-color: var(--ok); color: var(--ok); }
+  .order { margin-top: 18px; }
+  .order-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .svc { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: .93rem; }
+  .svc input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--signal-bright); }
+  .svc .price { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .insp { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
+  .insp select { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; background: var(--panel-2); font-size: .85rem; }
+  .photo { min-width: 54px; height: 26px; white-space: nowrap; padding: 0 6px; border: 1.5px dashed var(--muted); border-radius: 4px; background: transparent; font-size: .7rem; color: var(--muted); }
+  .photo.is-on { border-style: solid; border-color: var(--ok); color: var(--ok); }
+  .order-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .status-line { font-size: .9rem; color: var(--muted); }
+  .empty { color: var(--muted); font-size: .92rem; padding: 14px 0; }
+  .admin-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; margin-top: 22px; }
+  .chart { width: 100%; height: auto; }
+  .chart text { font-family: var(--font); fill: var(--muted); font-size: 12px; }
+  .chart .b { fill: var(--signal-bright); }
+  .chart .b2 { fill: var(--ink); opacity: .35; }
+  .chart .v { fill: var(--ink); font-weight: 700; font-size: 13px; }
+  .switch { position: relative; width: 40px; height: 22px; border-radius: 999px; background: var(--line); border: 0; flex: 0 0 auto; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel-2); transition: left .15s; }
+  .switch.is-on { background: var(--signal-bright); }
+  .switch.is-on::after { left: 21px; }
+  .rule-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: .92rem; }
+  .rule-row .txt b { font-weight: 800; }
+  .rule-row .txt small { display: block; color: var(--muted); font-size: .8rem; margin-top: 3px; }
+  .cat { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .cat th { text-align: left; font-weight: 700; padding: 6px 4px; border-bottom: 2px solid var(--ink); }
+  .cat td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  .cat input { width: 90px; border: 1px solid var(--line); border-radius: 5px; padding: 5px 7px; background: var(--panel-2); font-size: .88rem; text-align: right; font-variant-numeric: tabular-nums; }
+  .tpl textarea { width: 100%; min-height: 84px; border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; background: var(--panel-2); font-size: .9rem; resize: vertical; line-height: 1.4; }
+  .tpl .prev { margin-top: 8px; font-size: .85rem; background: var(--panel-2); border-radius: 8px; padding: 9px 11px; border: 1px solid var(--line); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; padding: 8px 14px; font-size: .88rem; }
+  .seg button.is-on { background: var(--ink); color: var(--bg); font-weight: 700; }
+  .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: var(--reel); color: var(--reel-digit); padding: 12px 18px; border-radius: 8px; font-size: .95rem; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50; max-width: 90vw; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+  .toast.is-on { opacity: 1; }
+
+  @media (max-width: 900px) {
+    .demo-layout, .admin-grid, .grid-2, .grid-3, .order-grid { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .players li { grid-template-columns: 1fr; gap: 2px; }
+    .type-sample { grid-template-columns: 1fr; gap: 4px; }
+    .matrix { font-size: .85rem; }
+    .brand small { display: none; }
+  }
+  @media (max-width: 460px) {
+    .phone { width: 100%; height: 700px; border-radius: 28px; border-width: 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .odo-strip { animation: none; transform: translateY(-10.35em); }
+    .slide.is-active { animation: none; }
+    .progress-bar, .switch::after, .toast { transition: none; }
+  }
+  @media print {
+    .top, .deck-bar, .progress, .deck-notes, .deck-help, .toast { display: none; }
+    .tab { display: block; page-break-after: always; }
+    .stage { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">Taller Conectado<small>Diseño de plataforma para Kilómetro 0</small></div>
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab-btn is-active" role="tab" data-tab="presentacion">Presentación</button>
+      <button class="tab-btn" role="tab" data-tab="investigacion">Investigación</button>
+      <button class="tab-btn" role="tab" data-tab="arquitectura">Arquitectura</button>
+      <button class="tab-btn" role="tab" data-tab="cliente">Demo Cliente</button>
+      <button class="tab-btn" role="tab" data-tab="taller">Demo Taller</button>
+      <button class="tab-btn" role="tab" data-tab="admin">Demo Administrador</button>
+    </nav>
+    <button class="theme-btn" id="theme-btn" type="button">Tema</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= PRESENTACIÓN ================= -->
+<section class="tab is-active" id="tab-presentacion">
+  <div class="stage-wrap">
+    <div class="stage" id="stage" tabindex="0" aria-label="Presentación">
+
+      <section class="slide is-active" data-title="Portada">
+        <div class="cover">
+          <div>
+            <h1 class="cover-title">Taller Conectado</h1>
+            <p class="cover-sub">Diseño de plataforma y plan de implementación para Kilómetro 0</p>
+            <p class="cover-sig">Mauricio Márquez Gutiérrez, Platform Engineer<br>Septiembre de 2026</p>
+          </div>
+          <div class="odo" aria-hidden="true">
+            <div class="odo-window"><div class="odo-strip"><span>9</span><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span><span>0</span></div></div>
+            <div class="odo-label">kilómetro cero</div>
+          </div>
+        </div>
+        <p class="hint">Flechas o deslizar para avanzar. T cambia el tema, F pantalla completa.</p>
+      </section>
+
+      <section class="slide" data-title="La tesis">
+        <h2 class="h">Un taller pierde al cliente entre visitas.</h2>
+        <p class="lead">Taller Conectado convierte cada visita en la siguiente.</p>
+        <ol class="chain"><li>historial, kilometraje y documentos</li><li>aviso por WhatsApp</li><li>cita agendada</li></ol>
+      </section>
+
+      <section class="slide slide-dense" data-title="El problema, con tus números">
+        <h2 class="h">El problema, con tus números.</h2>
+        <div class="reels">
+          <label class="reel"><span class="reel-label">Clientes atendidos al mes</span><input id="n-clientes" type="text" inputmode="numeric" autocomplete="off" placeholder="—" aria-label="Clientes atendidos al mes"></label>
+          <label class="reel"><span class="reel-label">Ticket promedio por servicio, en pesos</span><input id="n-ticket" type="text" inputmode="numeric" autocomplete="off" placeholder="—" aria-label="Ticket promedio por servicio en pesos"></label>
+          <label class="reel"><span class="reel-label">Clientes que vuelven a tiempo, en porcentaje</span><input id="n-pct" type="text" inputmode="numeric" autocomplete="off" placeholder="—" aria-label="Porcentaje de clientes que vuelven a tiempo"></label>
+        </div>
+        <p class="derived is-empty" id="derived" aria-live="polite">Llena las tres casillas con el dueño. Un cliente que vuelve tarde compra menos servicios al año y cotiza en otro taller.</p>
+        <div class="impact" id="impact" hidden>
+          <div class="impact-head">
+            <span>Simulación del impacto: si la plataforma sube los que vuelven a tiempo de <b id="imp-from">—</b> a <b id="imp-to">—</b></span>
+            <label class="impact-slider"><input type="range" id="imp-delta" min="5" max="30" step="5" value="15" aria-label="Mejora en puntos porcentuales"><span id="imp-delta-l">+15 puntos</span></label>
+          </div>
+          <div class="impact-grid">
+            <div><div class="n" id="imp-clientes">—</div><div class="l">clientes más que vuelven a tiempo cada mes</div></div>
+            <div><div class="n" id="imp-mes">—</div><div class="l">pesos al mes en servicios recuperados</div></div>
+            <div><div class="n" id="imp-anio">—</div><div class="l">pesos al año</div></div>
+          </div>
+          <p class="impact-note">Cada punto que suba el porcentaje vale <b id="imp-punto">—</b> pesos al año. Supuesto único: la mejora en puntos, que se mide en la Fase 1 contra esta línea base.</p>
+        </div>
+      </section>
+
+      <section class="slide slide-market" data-title="Lo mejor del mercado, replicado">
+        <h2 class="h">Lo mejor del mercado, replicado. Y una condicional propia.</h2>
+        <div class="cols three">
+          <div class="col">
+            <h3>Lo que hacen las mejores</h3>
+            <ul class="dash">
+              <li>Inspección digital con fotos enviada al cliente</li>
+              <li>Cotización aprobada desde el celular</li>
+              <li>Mensajería en dos vías</li>
+              <li>Orden de trabajo, tablero e historial</li>
+              <li>Agenda, recordatorios y portal del cliente</li>
+            </ul>
+            <p class="muted col-note">Tekmetric, Shopmonkey, AutoLeap, Shop-Ware, AutoVitals. Se replican en fases.</p>
+          </div>
+          <div class="col">
+            <h3>La condicional propia</h3>
+            <ul class="dash">
+              <li>Si el kilometraje proyectado se acerca al intervalo, si un documento vence o si mañana hay pico y placa, la plataforma le habla al cliente con algo útil, y el servicio va montado en eso.</li>
+              <li>WhatsApp sin instalar nada, desde la Fase 1.</li>
+              <li>El dato y la plataforma son del taller.</li>
+              <li>Segundo taller: configuración, no desarrollo.</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h3>Se integra, no se reinventa</h3>
+            <ul class="dash">
+              <li>Facturación electrónica</li>
+              <li>Inventario de repuestos</li>
+              <li>Contabilidad</li>
+            </ul>
+            <p class="muted col-note">Se conectan con las herramientas de siempre en la Fase 3.</p>
+          </div>
+        </div>
+        <p class="foot strong">Las apps de taller administran el taller. Esta plataforma también trabaja el tiempo entre visitas.</p>
+      </section>
+
+      <section class="slide" data-title="Arquitectura">
+        <h2 class="h">Un backend, tres ventanas.</h2>
+        <svg class="arch" viewBox="0 0 960 350" role="img" aria-label="Diagrama: tres ventanas (cliente, taller, administrador) conectadas a un solo backend; un segundo taller usa la misma plataforma con otra configuración">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"></path></marker>
+            <marker id="arrow-back" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path class="head" d="M10,0 L0,5 L10,10 z"></path></marker>
+          </defs>
+          <rect class="box" x="40" y="20" width="270" height="96" rx="4"></rect><text class="t-strong" x="66" y="62">Cliente</text><text class="t-muted" x="66" y="92">WhatsApp y app en el celular</text>
+          <rect class="box" x="345" y="20" width="270" height="96" rx="4"></rect><text class="t-strong" x="371" y="62">Taller</text><text class="t-muted" x="371" y="92">panel del mecánico</text>
+          <rect class="box" x="650" y="20" width="270" height="96" rx="4"></rect><text class="t-strong" x="676" y="62">Administrador</text><text class="t-muted" x="676" y="92">centro de control</text>
+          <line class="link" x1="175" y1="126" x2="250" y2="214"></line><line class="link" x1="480" y1="126" x2="480" y2="214"></line><line class="link" x1="785" y1="126" x2="660" y2="214"></line>
+          <rect class="box core" x="160" y="220" width="560" height="110" rx="6"></rect>
+          <text class="t-core t-strong" x="188" y="264">Un solo backend con los datos de Kilómetro 0</text>
+          <text class="t-core-muted" x="188" y="298">vehículos, historial, documentos, kilometraje, mensajes, condiciones</text>
+          <line class="link-dash" x1="722" y1="275" x2="752" y2="275"></line>
+          <rect class="second" x="754" y="220" width="186" height="110" rx="6"></rect>
+          <text class="t-strong" x="774" y="262">Segundo taller</text><text class="t-muted" x="774" y="290">misma plataforma,</text><text class="t-muted" x="774" y="314">otra configuración</text>
+        </svg>
+        <p class="foot strong">Multi-taller nativo: un segundo taller es configuración, no desarrollo.</p>
+      </section>
+
+      <section class="slide" data-title="Capa de IA">
+        <h2 class="h">Inteligencia artificial en tres tareas concretas.</h2>
+        <div class="trio">
+          <div><h3>Documentos por foto</h3><p>Se fotografía el SOAT o la tecnomecánica y el sistema extrae las fechas de vigencia. Sin digitar.</p></div>
+          <div><h3>Agente de WhatsApp</h3><p>Pregunta el kilometraje, entiende la respuesta libre («como 48 mil») y ofrece cita.</p></div>
+          <div><h3>Próximo servicio proyectado</h3><p>Con el patrón de kilometraje de cada vehículo calcula la fecha probable y avisa antes.</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Lo que ve el cliente">
+        <h2 class="h">Lo que ve el cliente.</h2>
+        <ul class="dash" style="margin-top: 2.4cqw"><li>Sus documentos, por color: vigente, por vencer, vencido.</li><li>El pico y placa de hoy y de mañana para su placa.</li><li>Reportar kilometraje en un toque.</li><li>Agendar la próxima cita.</li></ul>
+        <div class="btn-row"><button class="btn" type="button" data-goto="cliente">Verlo en vivo</button><small>Abre la demo del cliente en la pestaña siguiente.</small></div>
+      </section>
+
+      <section class="slide" data-title="Lo que gana el taller">
+        <h2 class="h">Lo que gana el taller.</h2>
+        <ul class="dash" style="margin-top: 2.4cqw"><li>Orden de trabajo desde la cita, sin papel.</li><li>Inspección con fotos y cotización aprobada por WhatsApp.</li><li>Historial del vehículo actualizado al cerrar.</li><li>Cliente notificado en el momento.</li></ul>
+        <div class="btn-row"><button class="btn" type="button" data-goto="taller">Verlo en vivo</button><small>Abre la demo del taller.</small></div>
+      </section>
+
+      <section class="slide" data-title="Método y fases">
+        <h2 class="h">Método y fases.</h2>
+        <ol class="timeline"><li>Visita</li><li class="now">Diseño<small>hoy</small></li><li>Fase 1</li><li>Medición</li><li>Fase 2</li><li>Fase 3</li></ol>
+        <div class="phases">
+          <div><h3>Fase 1</h3><p>Panel del taller, historial, inspección con fotos, cotización aprobada por WhatsApp y avisos por kilometraje y documentos.</p><p class="muted">Lo que mueve dinero.</p></div>
+          <div><h3>Fase 2</h3><p>App del cliente, pagos, campañas y tableros del dueño.</p></div>
+          <div><h3>Fase 3</h3><p>Multi-taller, flotas e integración con facturación e inventario.</p></div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Riesgos y cómo se cubren">
+        <h2 class="h">Riesgos y cómo se cubren.</h2>
+        <dl class="risks">
+          <dt>Kilometraje que nadie reporta</dt><dd>El taller registra el kilometraje en cada recepción; el sistema proyecta por promedio diario.</dd>
+          <dt>Fechas de SOAT y tecnomecánica</dt><dd>Se capturan en recepción o por foto; no dependen de una conexión externa.</dd>
+          <dt>Pico y placa cambia cada semestre</dt><dd>Tabla configurable, no lógica fija.</dd>
+          <dt>Datos personales: placas, cédulas, teléfonos</dt><dd>Autorización y política de tratamiento, según la Ley 1581.</dd>
+          <dt>Capacidad</dt><dd>Entrega por fases; nada entra todo a la vez.</dd>
+          <dt>Continuidad</dt><dd>Código y documentación en un repositorio del taller; mantenimiento pactado por escrito. Nada depende de una sola persona.</dd>
+        </dl>
+      </section>
+
+      <section class="slide" data-title="Costo de operar">
+        <h2 class="h">Costo de operar.</h2>
+        <ul class="costs"><li><span>Mensajes de WhatsApp</span><span>se paga por cada plantilla entregada; Twilio o Meta directo</span></li><li><span>Infraestructura</span><span>hosting y base de datos</span></li><li><span>Mantenimiento y evolución</span><span>el sistema vive; hay que cuidarlo</span></li></ul>
+        <p class="foot strong">El caso de negocio se cierra con estos tres costos frente a los tres números de la pantalla 3.</p>
+      </section>
+
+      <section class="slide" data-title="Lo que necesito de ti">
+        <h2 class="h">Lo que necesito de ti.</h2>
+        <ul class="dash" style="margin-top: 2.4cqw"><li>Una visita al taller, dos horas.</li><li>Los tres números.</li><li>Un mecánico y un cliente para probar la Fase 1.</li></ul>
+        <p class="close-line">Con eso te traigo la propuesta escrita: alcance, tiempos y valor. En diez días.</p>
+      </section>
+
+      <div class="deck-bar">
+        <div id="deck-title">Portada</div>
+        <div class="deck-actions">
+          <button type="button" id="btn-full">Pantalla completa</button>
+          <button type="button" class="nav" id="btn-prev" aria-label="Anterior">‹</button>
+          <span class="counter" id="counter">1 / 12</span>
+          <button type="button" class="nav" id="btn-next" aria-label="Siguiente">›</button>
+        </div>
+      </div>
+      <div class="progress"><div class="progress-bar" id="progress"></div></div>
+    </div>
+    <p class="deck-help">Haz clic en la presentación para tomar el control con el teclado. Desde el navegador se imprime a PDF, una pantalla por página.</p>
+  </div>
+</section>
+
+<!-- ================= INVESTIGACIÓN ================= -->
+<section class="tab" id="tab-investigacion">
+  <h1 class="page-title">Qué hacen las mejores apps de taller, qué replicamos y cuál es nuestra condicional.</h1>
+  <p class="page-lead">Método: se revisaron los líderes globales de gestión de talleres (los que marcan el estándar en inspección digital, aprobaciones y comunicación con el cliente) y los actores que operan en Colombia y la región. De ahí sale un inventario de funciones a replicar por fases, y encima una condicional que ninguno tiene.</p>
+
+  <div class="section">
+    <h2>Los referentes</h2>
+    <div class="grid-2">
+      <div class="block">
+        <h3>Globales: marcan el estándar</h3>
+        <ul class="players">
+          <li><span>Tekmetric</span><span>Inspección digital, construcción de órdenes, inventario, reloj de técnicos, aprobaciones digitales y reportes multi-sede.</span></li>
+          <li><span>Shopmonkey</span><span>Todo en uno: flujo de trabajo, pagos, inspecciones, pedido de repuestos, mensajería y analítica.</span></li>
+          <li><span>AutoLeap</span><span>Visibilidad del dueño: tableros, CRM y campañas, inspección y flujo de aprobación.</span></li>
+          <li><span>Shop-Ware</span><span>Inspección avanzada, portal del cliente con aprobaciones instantáneas, tableros de flujo, multi-sede.</span></li>
+          <li><span>AutoVitals</span><span>Inspección guiada para el técnico, entrega al asesor, marketing digital.</span></li>
+          <li><span>Autoflow</span><span>Inspección digital y mensajería de texto en dos vías como núcleo.</span></li>
+          <li><span>Garage360</span><span>Inspección con foto y video por SMS, trabajos predefinidos, matrices, recordatorios.</span></li>
+        </ul>
+      </div>
+      <div class="block">
+        <h3>Colombia y la región: lo que el dueño ya puede alquilar</h3>
+        <ul class="players">
+          <li><span>SPI Taller</span><span>Medellín. Citas, órdenes, mantenimientos, pintura, colisiones, garantías, tablero kanban; fuerte en motos.</span></li>
+          <li><span>ItsQuery</span><span>MiPymes colombianas: facturación electrónica ante la DIAN, inventario, órdenes con historial por vehículo.</span></li>
+          <li><span>Appli-Car</span><span>SaaS regional con clientes en Colombia: órdenes digitales, cotizaciones por WhatsApp, inventario, facturación, portal.</span></li>
+          <li><span>AppTaller + MyVA</span><span>App de cliente con estado del vehículo, documentos, sugerencias de mantenimiento con IA y promociones.</span></li>
+          <li><span>Recaudo</span><span>Recordatorios de mantenimiento por kilometraje enviados por WhatsApp con link para agendar y pagar.</span></li>
+          <li><span>Orderry</span><span>Gestión de taller con historial, app y recordatorios.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Inventario de funciones a replicar</h2>
+    <p class="muted" style="margin-bottom:6px">Lo que define a una app de taller de primer nivel en 2026, quién lo hace mejor y cómo entra en Kilómetro 0. Fase 1 es lo que mueve dinero; Fase 2 amplía la relación con el cliente; Fase 3 integra y replica.</p>
+    <table class="matrix">
+      <thead><tr><th>Función</th><th>Quién la hace mejor</th><th>Cómo la replicamos en Kilómetro 0</th><th>Fase</th></tr></thead>
+      <tbody>
+        <tr><td>Inspección digital del vehículo con fotos</td><td>Tekmetric, AutoVitals, Shop-Ware, Autoflow</td><td>Checklist guiado en el celular del mecánico; cada hallazgo con foto y estado (bien, atención, urgente); se envía al cliente por WhatsApp.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Cotización con aprobación digital</td><td>Shop-Ware, Tekmetric, Garage360</td><td>El cliente aprueba ítem por ítem desde WhatsApp con un toque; queda registro de qué aprobó y cuándo.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Mensajería en dos vías con el cliente</td><td>Autoflow, Shopmonkey</td><td>WhatsApp Business API (por Twilio o directamente con la Cloud API de Meta; la integración la construimos nosotros), con historial de conversación pegado a cada vehículo; el agente de IA atiende las respuestas simples.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Orden de trabajo y tablero de flujo</td><td>Shopmonkey, Shop-Ware, SPI Taller</td><td>Cita → orden → servicios validados → cierre. Tablero por estado; el mecánico marca, el sistema notifica.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Historial de servicio por vehículo</td><td>Todos los líderes</td><td>Cada orden cerrada alimenta el historial; el cliente lo ve en su ventana, el taller en la suya.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Agenda y reserva en línea</td><td>Shopmonkey, AutoLeap, Appli-Car</td><td>Cita desde WhatsApp o app con recordatorio automático el día anterior.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Recordatorios de mantenimiento por km y tiempo</td><td>AutoLeap, Recaudo, AppTaller</td><td>Proyección por promedio diario de km; aviso antes del intervalo. Es el corazón de la condicional propia.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Trabajos predefinidos y catálogo con intervalos</td><td>Garage360, Mitchell 1</td><td>Catálogo de servicios de Kilómetro 0 con intervalo en km y meses; es la palanca que dispara los avisos.</td><td><span class="fase fase-1">Fase 1</span></td></tr>
+        <tr><td>Portal o app del cliente</td><td>Shop-Ware, Appli-Car, AppTaller</td><td>App del cliente: estado del carro, documentos, historial, citas. Con pico y placa como razón diaria para abrirla.</td><td><span class="fase fase-2">Fase 2</span></td></tr>
+        <tr><td>Pagos en línea y link de pago</td><td>Shopmonkey, Recaudo</td><td>Link de pago por WhatsApp al cerrar la orden (pasarela local).</td><td><span class="fase fase-2">Fase 2</span></td></tr>
+        <tr><td>CRM y campañas de reactivación</td><td>AutoLeap, AutoVitals</td><td>Segmentos por tiempo sin volver; mensaje de reactivación y solicitud de reseña tras el servicio.</td><td><span class="fase fase-2">Fase 2</span></td></tr>
+        <tr><td>Lectura de placa y documentos por foto</td><td>AutoRepair Cloud, AutoVitals (VIN por foto)</td><td>IA: foto del SOAT o la tecnomecánica → fechas de vigencia; foto de la placa → vehículo. Sin digitar.</td><td><span class="fase fase-2">Fase 2</span></td></tr>
+        <tr><td>Reloj de técnico y productividad</td><td>Tekmetric</td><td>Tiempo por orden y por mecánico; misma lógica que ya se construyó para medir tiempos de operación logística.</td><td><span class="fase fase-2">Fase 2</span></td></tr>
+        <tr><td>Tableros y KPIs del dueño</td><td>AutoLeap, Shop-Ware, Tekmetric</td><td>Centro de control: clientes que vuelven a tiempo, avisos enviados, citas generadas por avisos, ticket promedio.</td><td><span class="fase fase-2">Fase 2</span></td></tr>
+        <tr><td>Multi-sede con reportes cruzados</td><td>Tekmetric, Shop-Ware</td><td>Multi-taller nativo desde el modelo de datos; el segundo taller es configuración.</td><td><span class="fase fase-3">Fase 3</span></td></tr>
+        <tr><td>Cuentas de flota</td><td>Fleetio (lado flota), Appli-Car</td><td>Cliente empresa con varios vehículos, aprobaciones por responsable, historial consolidado. Opción natural para las flotas del dueño.</td><td><span class="fase fase-3">Fase 3</span></td></tr>
+        <tr><td>Inventario y pedido de repuestos</td><td>Tekmetric, Shopmonkey, NAPA TRACS</td><td>Se integra con la herramienta actual del taller; construcción propia solo si el dueño la pide con números.</td><td><span class="fase fase-3">Fase 3</span></td></tr>
+        <tr><td>Facturación electrónica y contabilidad</td><td>ItsQuery, Appli-Car (DIAN), integraciones con QuickBooks en los globales</td><td>Integración con proveedor tecnológico autorizado por la DIAN; la orden cerrada genera el documento, no lo reemplaza.</td><td><span class="fase fase-3">Fase 3</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>La condicional propia</h2>
+    <div class="grid-2">
+      <div class="prose">
+        <p>Todas las apps anteriores están construidas para administrar el taller: la orden, el inventario, la factura. El recordatorio es un accesorio que existe para vender. La condicional de Kilómetro 0 invierte el orden: la plataforma vive en el tiempo entre visitas y le habla al dueño del carro con cosas que le sirven aunque no vaya a comprar nada. SOAT, tecnomecánica y pico y placa son su vida, no servicios del taller. Ese es el permiso que ninguna app de gestión tiene, y encima de ese permiso va el servicio.</p>
+        <p style="margin-top:12px">Es un motor de condiciones que el dueño configura desde el centro de control. Cada condición tiene un disparador, un mensaje útil y una oferta de cita.</p>
+      </div>
+      <div>
+        <div class="rule"><b>SI</b> el kilometraje proyectado está a 500 km o menos del intervalo de un servicio <b>ENTONCES</b> aviso con el kilometraje estimado y dos horarios de cita.</div>
+        <div class="rule"><b>SI</b> el SOAT o la tecnomecánica vencen en 30 días o menos <b>ENTONCES</b> recordatorio a los 30, 15 y 3 días, con la fecha exacta.</div>
+        <div class="rule"><b>SI</b> mañana aplica pico y placa para la placa del cliente <b>ENTONCES</b> aviso a las 7 de la noche de la víspera. La razón diaria para que la app exista.</div>
+        <div class="rule"><b>SI</b> pasan 45 días sin lectura de kilometraje <b>ENTONCES</b> el agente pregunta por WhatsApp y entiende la respuesta libre.</div>
+        <div class="rule"><b>SI</b> se cierra una orden <b>ENTONCES</b> resumen de lo hecho, próximo servicio proyectado y solicitud de reseña.</div>
+        <div class="rule"><b>SI</b> un cliente lleva una vez y media su intervalo sin volver <b>ENTONCES</b> mensaje de reactivación con su historial a la mano.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Lo que hace a la condicional difícil de copiar</h2>
+    <div class="grid-3">
+      <div class="block"><h3>Canal colombiano</h3><p>WhatsApp primero, sin instalar nada. La app llega después, con pico y placa como razón para abrirla todos los días. Nadie instala la app de un solo taller si no le sirve a diario.</p></div>
+      <div class="block"><h3>Propiedad del dato</h3><p>La base de clientes y el historial son del taller, en su propia plataforma. Con un SaaS viven en el servidor de un tercero, bajo una mensualidad que sube cuando el proveedor quiere.</p></div>
+      <div class="block"><h3>Replicable y con IA</h3><p>Un segundo taller es configuración. Y tres tareas de IA concretas: documentos por foto, agente de kilometraje y próximo servicio proyectado, construidas con piezas ya probadas.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Fuentes consultadas</h2>
+    <ul class="sources">
+      <li><a href="https://www.capterra.com/auto-repair-software/" target="_blank" rel="noopener">Capterra, Best Auto Repair Software 2026</a></li>
+      <li><a href="https://techroute66.com/auto-repair-management-software" target="_blank" rel="noopener">TechRoute66, 7 Best Auto Repair Shop Management Software 2026</a></li>
+      <li><a href="https://www.guideflow.com/blog/vehicle-inspection-software" target="_blank" rel="noopener">Guideflow, 7 best vehicle inspection software for 2026</a></li>
+      <li><a href="https://www.getapp.com/retail-consumer-services-software/auto-repair/" target="_blank" rel="noopener">GetApp, Auto Repair Software comparison</a></li>
+      <li><a href="https://spisoluciones.com/website/spitaller.html" target="_blank" rel="noopener">SPI Taller</a>, <a href="https://blog.itsquery.com/posts/software-para-taller-mecanico-colombia-2026/" target="_blank" rel="noopener">ItsQuery</a>, <a href="https://www.appli-car.com/es/" target="_blank" rel="noopener">Appli-Car</a></li>
+      <li><a href="https://www.medellin.gov.co/es/secretaria-de-movilidad/pico-y-placa-medellin-2023-segundo-semestre/" target="_blank" rel="noopener">Alcaldía de Medellín, Pico y Placa segundo semestre 2026</a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= ARQUITECTURA ================= -->
+<section class="tab" id="tab-arquitectura">
+  <h1 class="page-title">Arquitectura del diseño.</h1>
+  <p class="page-lead">Tres diagramas: cómo está armado el sistema, cómo las tres ventanas son la misma plataforma, y qué pasa por dentro cuando sale una notificación. Al final, el sistema de diseño.</p>
+
+  <div class="section">
+    <h2>1. Arquitectura técnica</h2>
+    <svg class="diagram" viewBox="0 0 1000 470" role="img" aria-label="Arquitectura técnica: canales a la izquierda, núcleo de la API en el centro con el motor de condiciones, datos y servicios a la derecha">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hd" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hdm" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="t-m" x="20" y="24">Canales</text>
+      <rect class="bx" x="20" y="40" width="250" height="70" rx="6"/><text class="t-b" x="36" y="68">WhatsApp Business API</text><text class="t-m" x="36" y="92">Twilio o Cloud API de Meta · integración propia</text>
+      <rect class="bx" x="20" y="130" width="250" height="70" rx="6"/><text class="t-b" x="36" y="158">App del cliente</text><text class="t-m" x="36" y="182">Fase 2 · documentos, pico y placa, citas</text>
+      <rect class="bx" x="20" y="220" width="250" height="70" rx="6"/><text class="t-b" x="36" y="248">Panel del taller</text><text class="t-m" x="36" y="272">web · celular del mecánico</text>
+      <rect class="bx" x="20" y="310" width="250" height="70" rx="6"/><text class="t-b" x="36" y="338">Centro de control</text><text class="t-m" x="36" y="362">web · dueño y administración</text>
+
+      <text class="t-m" x="330" y="24">Núcleo</text>
+      <rect class="bx" x="330" y="40" width="330" height="340" rx="8"/>
+      <text class="t-b" x="348" y="70">API · Node y TypeScript</text>
+      <rect class="bx" x="348" y="90" width="294" height="44" rx="5"/><text x="362" y="117">Órdenes, citas e inspecciones</text>
+      <rect class="bx" x="348" y="144" width="294" height="44" rx="5"/><text x="362" y="171">Vehículos, documentos y kilometraje</text>
+      <rect class="bx-amber" x="348" y="198" width="294" height="52" rx="5"/><text class="step-n" x="362" y="220">Motor de condiciones</text><text x="362" y="240" style="fill:#12181F;font-size:13px">si … entonces … configurable por taller</text>
+      <rect class="bx" x="348" y="260" width="294" height="44" rx="5"/><text x="362" y="287">Mensajería y plantillas</text>
+      <rect class="bx" x="348" y="314" width="294" height="44" rx="5"/><text x="362" y="341">Agente de IA · lee respuestas libres</text>
+
+      <text class="t-m" x="720" y="24">Datos y servicios</text>
+      <rect class="bx-dark" x="720" y="40" width="260" height="70" rx="6"/><text class="t-w t-b" x="736" y="68">Base de datos</text><text class="t-wm" x="736" y="92">PostgreSQL · taller_id en todas las tablas</text>
+      <rect class="bx" x="720" y="130" width="260" height="70" rx="6"/><text class="t-b" x="736" y="158">Fotos y documentos</text><text class="t-m" x="736" y="182">almacenamiento de objetos</text>
+      <rect class="bx" x="720" y="220" width="260" height="70" rx="6"/><text class="t-b" x="736" y="248">IA: visión y lenguaje</text><text class="t-m" x="736" y="272">fechas desde fotos · lectura de km</text>
+      <rect class="bx" x="720" y="310" width="260" height="70" rx="6"/><text class="t-b" x="736" y="338">Programador de tareas</text><text class="t-m" x="736" y="362">evalúa las condiciones cada hora</text>
+
+      <line class="ln" x1="270" y1="75" x2="330" y2="75"/><line class="ln" x1="270" y1="165" x2="330" y2="165"/><line class="ln" x1="270" y1="255" x2="330" y2="255"/><line class="ln" x1="270" y1="345" x2="330" y2="345"/>
+      <line class="ln" x1="660" y1="75" x2="720" y2="75"/><line class="ln" x1="660" y1="165" x2="720" y2="165"/><line class="ln" x1="660" y1="255" x2="720" y2="255"/>
+      <path class="ln-m" d="M720,345 C690,345 690,224 660,224"/>
+      <rect class="bx-dash" x="20" y="410" width="960" height="44" rx="6"/><text class="t-m" x="36" y="437">Multi-taller: Kilómetro 0 y cualquier segundo taller comparten núcleo, base y servicios; cambian catálogo, condiciones, plantillas y usuarios.</text>
+    </svg>
+  </div>
+
+  <div class="section">
+    <h2>2. Mapa de pantallas: tres ventanas a un mismo backend</h2>
+    <svg class="diagram" viewBox="0 0 1000 400" role="img" aria-label="Mapa de pantallas de las tres aplicaciones conectadas a un mismo backend">
+      <rect class="bx" x="20" y="20" width="300" height="200" rx="8"/><text class="t-b" x="36" y="48">Cliente</text><text class="t-m" x="36" y="68">WhatsApp hoy · app en Fase 2</text>
+      <rect class="bx" x="36" y="84" width="128" height="40" rx="5"/><text x="48" y="109">Inicio</text>
+      <rect class="bx" x="176" y="84" width="128" height="40" rx="5"/><text x="188" y="109">Historial</text>
+      <rect class="bx" x="36" y="136" width="128" height="40" rx="5"/><text x="48" y="161">Citas</text>
+      <rect class="bx" x="176" y="136" width="128" height="40" rx="5"/><text x="188" y="161">Avisos</text>
+      <text class="t-m" x="36" y="204">documentos, pico y placa, kilometraje</text>
+
+      <rect class="bx" x="350" y="20" width="300" height="200" rx="8"/><text class="t-b" x="366" y="48">Taller</text><text class="t-m" x="366" y="68">panel del mecánico y recepción</text>
+      <rect class="bx" x="366" y="84" width="128" height="40" rx="5"/><text x="378" y="109">Tablero</text>
+      <rect class="bx" x="506" y="84" width="128" height="40" rx="5"/><text x="518" y="109">Orden</text>
+      <rect class="bx" x="366" y="136" width="128" height="40" rx="5"/><text x="378" y="161">Inspección</text>
+      <rect class="bx" x="506" y="136" width="128" height="40" rx="5"/><text x="518" y="161">Cotización</text>
+      <text class="t-m" x="366" y="204">kilometraje, fotos, aprobación, cierre</text>
+
+      <rect class="bx" x="680" y="20" width="300" height="200" rx="8"/><text class="t-b" x="696" y="48">Administrador</text><text class="t-m" x="696" y="68">centro de control del dueño</text>
+      <rect class="bx" x="696" y="84" width="128" height="40" rx="5"/><text x="708" y="109">KPIs</text>
+      <rect class="bx" x="836" y="84" width="128" height="40" rx="5"/><text x="848" y="109">Condiciones</text>
+      <rect class="bx" x="696" y="136" width="128" height="40" rx="5"/><text x="708" y="161">Catálogo</text>
+      <rect class="bx" x="836" y="136" width="128" height="40" rx="5"/><text x="848" y="161">Plantillas</text>
+      <text class="t-m" x="696" y="204">intervalos, mensajes, talleres, usuarios</text>
+
+      <line class="ln" x1="170" y1="220" x2="380" y2="300"/><line class="ln" x1="500" y1="220" x2="500" y2="300"/><line class="ln" x1="830" y1="220" x2="620" y2="300"/>
+      <rect class="bx-dark" x="200" y="300" width="600" height="80" rx="8"/>
+      <text class="t-w t-b" x="220" y="332">Un solo backend: los datos de Kilómetro 0</text>
+      <text class="t-wm" x="220" y="358">vehículos · historial · documentos · kilometraje · conversaciones · condiciones · citas</text>
+    </svg>
+  </div>
+
+  <div class="section">
+    <h2>3. Mecanismo de una notificación, paso a paso</h2>
+    <svg class="diagram" viewBox="0 0 1000 300" role="img" aria-label="Ocho pasos desde la lectura de kilometraje hasta la cita registrada">
+      <g>
+        <circle class="step" cx="40" cy="50" r="16"/><text class="step-n" x="35" y="55">1</text><text class="t-b" x="66" y="44">Recepción registra el km</text><text class="t-m" x="66" y="64">o el cliente lo reporta</text>
+        <circle class="step" cx="290" cy="50" r="16"/><text class="step-n" x="285" y="55">2</text><text class="t-b" x="316" y="44">Motor proyecta</text><text class="t-m" x="316" y="64">promedio diario de km</text>
+        <circle class="step" cx="540" cy="50" r="16"/><text class="step-n" x="535" y="55">3</text><text class="t-b" x="566" y="44">Condición cumplida</text><text class="t-m" x="566" y="64">a 500 km del intervalo</text>
+        <circle class="step" cx="790" cy="50" r="16"/><text class="step-n" x="785" y="55">4</text><text class="t-b" x="816" y="44">Plantilla del taller</text><text class="t-m" x="816" y="64">con nombre, placa y km</text>
+        <line class="ln" x1="230" y1="50" x2="270" y2="50"/><line class="ln" x1="480" y1="50" x2="520" y2="50"/><line class="ln" x1="730" y1="50" x2="770" y2="50"/>
+        <path class="ln" d="M960,70 C960,120 40,90 40,150"/>
+        <circle class="step" cx="40" cy="190" r="16"/><text class="step-n" x="35" y="195">5</text><text class="t-b" x="66" y="184">WhatsApp al cliente</text><text class="t-m" x="66" y="204">plantilla aprobada por Meta</text>
+        <circle class="step" cx="290" cy="190" r="16"/><text class="step-n" x="285" y="195">6</text><text class="t-b" x="316" y="184">El cliente responde</text><text class="t-m" x="316" y="204">el agente entiende «el jueves»</text>
+        <circle class="step" cx="540" cy="190" r="16"/><text class="step-n" x="535" y="195">7</text><text class="t-b" x="566" y="184">Cita creada</text><text class="t-m" x="566" y="204">aparece en el tablero del taller</text>
+        <circle class="step" cx="790" cy="190" r="16"/><text class="step-n" x="785" y="195">8</text><text class="t-b" x="816" y="184">Historial y KPI</text><text class="t-m" x="816" y="204">cliente que volvió a tiempo</text>
+        <line class="ln" x1="230" y1="190" x2="270" y2="190"/><line class="ln" x1="480" y1="190" x2="520" y2="190"/><line class="ln" x1="730" y1="190" x2="770" y2="190"/>
+        <rect class="bx-dash" x="20" y="240" width="960" height="44" rx="6"/><text class="t-m" x="36" y="267">El mismo mecanismo corre para documentos (30, 15 y 3 días antes) y para pico y placa (la víspera a las 7 p. m.). Solo cambia la condición y la plantilla.</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="section">
+    <h2>4. Sistema de diseño</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Color</h3>
+        <div class="swatches">
+          <div class="swatch"><div style="background:#E8E9E6"></div><span>Concreto · fondo claro</span></div>
+          <div class="swatch"><div style="background:#151C24"></div><span>Pizarra · fondo oscuro</span></div>
+          <div class="swatch"><div style="background:#E4A800"></div><span>Ámbar de tablero · acento</span></div>
+          <div class="swatch"><div style="background:#12181F"></div><span>Rodillo · odómetro</span></div>
+          <div class="swatch"><div style="background:#2E7D4F"></div><span>Vigente</span></div>
+          <div class="swatch"><div style="background:#B96A00"></div><span>Por vencer</span></div>
+          <div class="swatch"><div style="background:#B3261E"></div><span>Vencido</span></div>
+        </div>
+        <p class="muted" style="margin-top:12px;font-size:.9rem">Un solo acento. Los tres colores de estado solo aparecen sobre documentos, kilometraje y hallazgos de inspección.</p>
+      </div>
+      <div>
+        <h3>Tipografía y componentes</h3>
+        <div class="type-sample"><span class="muted">Archivo 800, ancho 90</span><span style="font-size:1.6rem;font-weight:800;font-stretch:90%">Taller Conectado</span></div>
+        <div class="type-sample"><span class="muted">Archivo 700</span><span style="font-size:1.15rem;font-weight:700">Encabezados y nombres de servicio</span></div>
+        <div class="type-sample"><span class="muted">Archivo 400</span><span>Texto corrido, mensajes y notas</span></div>
+        <div class="type-sample"><span class="muted">Cifras tabulares</span><span style="font-weight:800;font-stretch:80%;font-size:1.5rem;font-variant-numeric:tabular-nums">47.800 km</span></div>
+        <div class="comp-row" style="margin-top:14px">
+          <button class="cta" type="button">Acción principal</button>
+          <button class="cta ghost" type="button">Secundaria</button>
+          <span class="chip is-on">Jueves 8:00</span><span class="chip">Viernes 10:00</span>
+          <span class="plate">GHS 483</span>
+          <span class="st st-ok">Vigente</span><span class="st st-warn">Vence en 18 días</span><span class="st st-bad">Vencido</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEMO CLIENTE ================= -->
+<section class="tab" id="tab-cliente">
+  <div class="demo-head">
+    <div>
+      <h1 class="page-title">Demo del cliente.</h1>
+      <p class="page-lead">La ventana del dueño del carro. En Fase 1 todo esto llega por WhatsApp; la app de Fase 2 se ve así. Los datos son de ejemplo, pero el pico y placa y las fechas se calculan con la fecha real de hoy.</p>
+    </div>
+  </div>
+  <div class="demo-layout">
+    <div class="phone" aria-label="Simulación de la app del cliente">
+      <div class="phone-notch"></div>
+      <div class="screen">
+        <div class="app-view is-active" id="v-inicio"></div>
+        <div class="app-view" id="v-historial"></div>
+        <div class="app-view" id="v-citas"></div>
+        <div class="app-view" id="v-avisos"></div>
+      </div>
+      <nav class="app-nav" aria-label="Navegación de la app">
+        <button type="button" class="is-active" data-view="inicio">Inicio</button>
+        <button type="button" data-view="historial">Historial</button>
+        <button type="button" data-view="citas">Citas</button>
+        <button type="button" data-view="avisos">Avisos</button>
+      </nav>
+    </div>
+    <div class="explain">
+      <h3>Qué probar</h3>
+      <ol>
+        <li>Mira el pico y placa: se calcula con la tabla vigente de Medellín (segundo semestre de 2026), la fecha de hoy y el último dígito de la placa GHS 483. Incluye el aviso de mañana.</li>
+        <li>Los documentos cambian de color según los días que faltan: vigente, por vencer, vencido.</li>
+        <li>Toca «Reportar km» y escribe, por ejemplo, 49.600. El próximo servicio se recalcula y, si quedan 500 km o menos, aparece un aviso.</li>
+        <li>Toca «Agendar», elige día y hora y confirma. La cita aparece en el tablero de la demo del taller: es el mismo backend.</li>
+        <li>Luego cierra la orden en la demo del taller y vuelve aquí: el historial y los avisos ya cambiaron.</li>
+      </ol>
+      <p class="muted" style="margin-top:16px;font-size:.88rem">Condicional propia en acción: el cliente recibe cosas que le sirven (documentos, pico y placa) y el servicio va montado en eso.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEMO TALLER ================= -->
+<section class="tab" id="tab-taller">
+  <div class="demo-head">
+    <div>
+      <h1 class="page-title">Demo del taller.</h1>
+      <p class="page-lead">El panel del mecánico y de recepción. Replica lo que hacen las mejores: orden de trabajo desde la cita, inspección digital con fotos, cotización aprobada por WhatsApp y cierre que notifica al cliente y alimenta el historial.</p>
+    </div>
+  </div>
+  <div class="kpis" id="t-kpis"></div>
+  <div class="admin-grid">
+    <div class="panel">
+      <h3>Citas de hoy</h3>
+      <div id="t-citas"></div>
+      <h3 style="margin-top:20px">Próximas</h3>
+      <div id="t-proximas"><p class="empty">Las citas que el cliente agende desde su app aparecen aquí.</p></div>
+    </div>
+    <div class="panel" id="t-orden"><p class="empty">Abre una cita para ver su orden de trabajo.</p></div>
+  </div>
+</section>
+
+<!-- ================= DEMO ADMINISTRADOR ================= -->
+<section class="tab" id="tab-admin">
+  <div class="demo-head">
+    <div>
+      <h1 class="page-title">Demo del administrador.</h1>
+      <p class="page-lead">El centro de control del dueño: indicadores, el motor de condiciones, el catálogo con intervalos que dispara los avisos y las plantillas. Cambia de taller para ver que el segundo es configuración, no desarrollo.</p>
+    </div>
+    <div class="seg" id="a-seg" role="group" aria-label="Taller">
+      <button type="button" class="is-on" data-taller="k0">Kilómetro 0</button>
+      <button type="button" data-taller="t2">Taller 2 (ejemplo)</button>
+    </div>
+  </div>
+  <div class="kpis" id="a-kpis"></div>
+  <div class="admin-grid">
+    <div class="panel">
+      <h3>Avisos enviados este mes, por tipo</h3>
+      <svg class="chart" id="a-chart" viewBox="0 0 520 220" role="img" aria-label="Avisos enviados este mes por tipo"></svg>
+      <p class="status-line" id="a-chart-note"></p>
+    </div>
+    <div class="panel">
+      <h3>Motor de condiciones</h3>
+      <div id="a-rules"></div>
+    </div>
+  </div>
+  <div class="admin-grid">
+    <div class="panel">
+      <h3>Catálogo de servicios e intervalos</h3>
+      <p class="status-line" style="margin-bottom:10px">Cambia el intervalo del cambio de aceite y mira cómo se mueve el próximo servicio en la demo del cliente.</p>
+      <table class="cat"><thead><tr><th>Servicio</th><th>Cada km</th><th>Cada meses</th><th>Precio de referencia</th></tr></thead><tbody id="a-cat"></tbody></table>
+    </div>
+    <div class="panel tpl">
+      <h3>Plantillas de mensajes</h3>
+      <div id="a-tpl"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var nf = new Intl.NumberFormat('es-CO');
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function daysUntil(d) { return Math.round((d - today) / 86400000); }
+  function fmtLong(d) { return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }); }
+  function fmtShort(d) { return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }); }
+  function fmtFull(d) { return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var toastEl = $('#toast'), toastT;
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('is-on'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('is-on'); }, 3400); }
+
+  /* ---------- tema y pestañas ---------- */
+  $('#theme-btn').addEventListener('click', function () { var d = document.documentElement; d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'; });
+  var currentTab = 'presentacion';
+  var stage = $('#stage');
+  function showTab(name) {
+    currentTab = name;
+    $$('.tab-btn').forEach(function (b) { var on = b.dataset.tab === name; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    $$('.tab').forEach(function (t) { t.classList.toggle('is-active', t.id === 'tab-' + name); });
+    window.scrollTo(0, 0);
+    if (name === 'presentacion') { stage.focus({ preventScroll: true }); }
+  }
+  $$('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
+  $$('[data-goto]').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.goto); }); });
+
+  /* ---------- presentación ---------- */
+  var slides = $$('.slide', stage), total = slides.length, cur = 0;
+  function renderDeck() {
+    slides.forEach(function (s, i) { s.classList.toggle('is-active', i === cur); });
+    $('#counter').textContent = (cur + 1) + ' / ' + total;
+    $('#progress').style.width = ((cur + 1) / total * 100) + '%';
+    var title = slides[cur].dataset.title || '';
+    $('#deck-title').textContent = title;
+  }
+  function go(n) { if (n < 0 || n >= total) return; cur = n; renderDeck(); var a = document.activeElement; if (a && a.tagName === 'INPUT') a.blur(); }
+  function next() { go(cur + 1); }
+  function prev() { go(cur - 1); }
+  function toggleFull() {
+    try {
+      if (!document.fullscreenElement) { var p = stage.requestFullscreen && stage.requestFullscreen(); if (p && p.catch) p.catch(function () {}); }
+      else if (document.exitFullscreen) { document.exitFullscreen(); }
+    } catch (e) {}
+  }
+  $('#btn-next').addEventListener('click', function () { next(); stage.focus({ preventScroll: true }); });
+  $('#btn-prev').addEventListener('click', function () { prev(); stage.focus({ preventScroll: true }); });
+  $('#btn-full').addEventListener('click', toggleFull);
+  document.addEventListener('keydown', function (e) {
+    if (currentTab !== 'presentacion') return;
+    var t = e.target;
+    var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    if (typing) { if (e.key === 'Escape') t.blur(); return; }
+    if (t && (t.tagName === 'BUTTON' || t.tagName === 'A') && (e.key === ' ' || e.key === 'Enter')) return;
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ': e.preventDefault(); next(); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': e.preventDefault(); prev(); break;
+      case 'Home': e.preventDefault(); go(0); break;
+      case 'End': e.preventDefault(); go(total - 1); break;
+      case 't': case 'T': $('#theme-btn').click(); break;
+      case 'f': case 'F': toggleFull(); break;
+    }
+  });
+  var x0 = null;
+  stage.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) { if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 60) { if (dx < 0) next(); else prev(); } x0 = null; }, { passive: true });
+
+  /* pantalla 3: cálculo en vivo */
+  var iC = $('#n-clientes'), iT = $('#n-ticket'), iP = $('#n-pct'), derived = $('#derived');
+  function num(el) { var v = (el.value || '').replace(/[^\d]/g, ''); return v ? parseInt(v, 10) : NaN; }
+  var impact = $('#impact'), impDelta = $('#imp-delta');
+  function updateDerived() {
+    var c = num(iC), t = num(iT), p = num(iP);
+    impact.hidden = true;
+    if (isNaN(c) || isNaN(p)) { derived.textContent = 'Llena las tres casillas con el dueño. Un cliente que vuelve tarde compra menos servicios al año y cotiza en otro taller.'; derived.classList.add('is-empty'); return; }
+    if (p > 100) { derived.textContent = 'El porcentaje va de 0 a 100.'; derived.classList.add('is-empty'); return; }
+    var late = Math.round(c * (100 - p) / 100);
+    var text = 'Hoy: cada mes, ' + nf.format(late) + (late === 1 ? ' cliente vuelve tarde o no vuelve.' : ' clientes vuelven tarde o no vuelven.');
+    if (!isNaN(t) && t > 0) text += ' A tu ticket promedio, ' + nf.format(late * t) + ' pesos que se aplazan o se van a otro taller.';
+    derived.textContent = text; derived.classList.remove('is-empty');
+    if (isNaN(t) || t <= 0) return;
+    var room = Math.max(0, 95 - p);
+    var delta = Math.min(parseInt(impDelta.value, 10), Math.floor(room / 5) * 5);
+    if (delta <= 0) { impact.hidden = false; $('#imp-from').textContent = p + ' %'; $('#imp-to').textContent = 'más'; $('#imp-delta-l').textContent = 'ya está en el techo'; ['imp-clientes', 'imp-mes', 'imp-anio', 'imp-punto'].forEach(function (id) { $('#' + id).textContent = '—'; }); return; }
+    impDelta.max = Math.max(5, Math.min(30, Math.floor(room / 5) * 5)); impDelta.value = delta;
+    var rec = Math.round(c * delta / 100), mes = rec * t, anio = mes * 12, punto = Math.round(c * t * 12 / 100);
+    $('#imp-from').textContent = p + ' %'; $('#imp-to').textContent = (p + delta) + ' %'; $('#imp-delta-l').textContent = '+' + delta + ' puntos';
+    $('#imp-clientes').textContent = nf.format(rec); $('#imp-mes').textContent = nf.format(mes); $('#imp-anio').textContent = nf.format(anio); $('#imp-punto').textContent = nf.format(punto);
+    impact.hidden = false;
+  }
+  impDelta.addEventListener('input', updateDerived);
+  [iC, iT, iP].forEach(function (el) {
+    el.addEventListener('input', updateDerived);
+    el.addEventListener('blur', function () { var n = num(el); if (!isNaN(n) && el !== iP) el.value = nf.format(n); });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); var o = [iC, iT, iP], i = o.indexOf(el); if (i < 2) o[i + 1].focus(); else el.blur(); } });
+  });
+  renderDeck();
+
+  /* ---------- pico y placa Medellín, tabla vigente (2.º semestre 2026) ---------- */
+  var PP = { table: { 1: [5, 8], 2: [1, 4], 3: [0, 2], 4: [3, 6], 5: [7, 9] }, holidays: ['2026-10-12', '2026-11-02', '2026-11-16', '2026-12-08', '2026-12-25', '2027-01-01', '2027-01-11'] };
+  function isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function ppFor(d, digit) {
+    var dow = d.getDay();
+    if (dow === 0 || dow === 6) return { aplica: false, motivo: 'fin de semana' };
+    if (PP.holidays.indexOf(isoLocal(d)) >= 0) return { aplica: false, motivo: 'festivo' };
+    var digs = PP.table[dow];
+    return { aplica: digs.indexOf(digit) >= 0, digs: digs, motivo: '' };
+  }
+
+  /* ---------- configuración por taller (lo que cambia entre talleres) ---------- */
+  var talleres = {
+    k0: { nombre: 'Kilómetro 0', clientes: 412, vuelven: 68, avisosMes: 312, citasPorAviso: 41,
+      chart: [['Documentos', 118], ['Pico y placa', 96], ['Kilometraje', 64], ['Citas', 34]],
+      catalogo: [
+        { id: 'aceite', s: 'Cambio de aceite y filtro', km: 5000, meses: 6, precio: 180000 },
+        { id: 'llantas', s: 'Rotación de llantas', km: 10000, meses: 12, precio: 60000 },
+        { id: 'aire', s: 'Filtro de aire', km: 15000, meses: 12, precio: 70000 },
+        { id: 'frenos', s: 'Pastillas de freno', km: 30000, meses: 24, precio: 320000 },
+        { id: 'alineacion', s: 'Alineación y balanceo', km: 10000, meses: 12, precio: 90000 }],
+      plantillas: {
+        servicio: 'Hola, {nombre}. Tu {vehiculo} ({placa}) está a unos {km_faltan} km del {servicio}. ¿Te reservamos el jueves a las 8 o el viernes a las 10?',
+        documento: 'Hola, {nombre}. Tu {documento} vence el {fecha}, en {dias} días. Si quieres, te recordamos 3 días antes.',
+        pico: 'Hola, {nombre}. Mañana tu placa {placa} tiene pico y placa de 5 a. m. a 8 p. m. Que no te agarre por sorpresa.' },
+      reglas: [true, true, true, true, true, false] },
+    t2: { nombre: 'Taller 2 (ejemplo)', clientes: 96, vuelven: 54, avisosMes: 71, citasPorAviso: 9,
+      chart: [['Documentos', 31], ['Pico y placa', 22], ['Kilometraje', 12], ['Citas', 6]],
+      catalogo: [
+        { id: 'aceite', s: 'Cambio de aceite y filtro', km: 7000, meses: 8, precio: 210000 },
+        { id: 'llantas', s: 'Rotación de llantas', km: 12000, meses: 12, precio: 65000 },
+        { id: 'aire', s: 'Filtro de aire', km: 20000, meses: 18, precio: 75000 },
+        { id: 'frenos', s: 'Pastillas de freno', km: 35000, meses: 24, precio: 340000 },
+        { id: 'alineacion', s: 'Alineación y balanceo', km: 15000, meses: 12, precio: 95000 }],
+      plantillas: {
+        servicio: 'Buen día, {nombre}. Según nuestro registro, su {vehiculo} ({placa}) se aproxima al {servicio}: faltan {km_faltan} km. ¿Desea agendar una cita?',
+        documento: 'Buen día, {nombre}. Le informamos que su {documento} vence el {fecha} ({dias} días). Quedamos atentos.',
+        pico: 'Buen día, {nombre}. Le recordamos que mañana su placa {placa} tiene restricción de pico y placa de 5:00 a 20:00.' },
+      reglas: [true, true, false, true, true, false] }
+  };
+  var tallerActual = 'k0';
+  var REGLAS = [
+    ['Kilometraje cerca del intervalo', 'Si el kilometraje proyectado está a 500 km o menos de un servicio, aviso con el km estimado y dos horarios de cita.'],
+    ['Documento por vencer', 'Si el SOAT o la tecnomecánica vencen en 30 días o menos, recordatorio a los 30, 15 y 3 días.'],
+    ['Pico y placa de mañana', 'Si mañana aplica para la placa del cliente, aviso a las 7 p. m. de la víspera.'],
+    ['Sin lectura de kilometraje', 'Si pasan 45 días sin lectura, el agente pregunta por WhatsApp y entiende la respuesta libre.'],
+    ['Orden cerrada', 'Resumen de lo hecho, próximo servicio proyectado y solicitud de reseña.'],
+    ['Cliente que no vuelve', 'A una vez y media su intervalo sin volver, mensaje de reactivación con su historial a la mano. Fase 2.']
+  ];
+
+  /* ---------- estado compartido: un solo backend ---------- */
+  var S = {
+    nombre: 'Carolina',
+    veh: { modelo: 'Mazda 3 Touring 2021', corto: 'Mazda 3', placa: 'GHS 483', digito: 3, km: 47800, kmDia: 38, lectura: addDays(today, -9) },
+    ultimoAceiteKm: 45000,
+    docs: { soat: addDays(today, 18), tecno: addDays(today, 143) },
+    historial: [
+      { fecha: addDays(today, -96), km: 45000, items: ['Cambio de aceite y filtro', 'Rotación de llantas'] },
+      { fecha: addDays(today, -231), km: 40150, items: ['Pastillas de freno delanteras', 'Alineación y balanceo'] },
+      { fecha: addDays(today, -388), km: 34800, items: ['Cambio de aceite y filtro', 'Filtro de aire'] }],
+    citasNuevas: [],
+    avisos: [],
+    cerradasHoy: 0
+  };
+  function proximo() {
+    var cat = talleres.k0.catalogo[0];
+    var at = S.ultimoAceiteKm + cat.km, faltan = at - S.veh.km;
+    var dias = Math.max(0, Math.ceil(faltan / S.veh.kmDia));
+    return { servicio: cat.s, at: at, faltan: faltan, fecha: addDays(today, dias) };
+  }
+  function docState(d) {
+    var n = daysUntil(d);
+    if (n < 0) return { cls: 'bad', txt: 'Vencido hace ' + (-n) + ' días' };
+    if (n <= 30) return { cls: 'warn', txt: 'Vence en ' + n + ' días, el ' + fmtShort(d) };
+    return { cls: 'ok', txt: 'Vigente hasta el ' + fmtFull(d) };
+  }
+  (function seed() {
+    var p = proximo();
+    S.avisos.push({ t: 'Servicio', m: 'Tu ' + S.veh.corto + ' está a unos ' + nf.format(p.faltan) + ' km del cambio de aceite. ¿Agendamos? Jueves 8:00 o viernes 10:00.', cuando: 'hace 4 días' });
+    S.avisos.push({ t: 'SOAT', m: 'Tu SOAT vence el ' + fmtFull(S.docs.soat) + ', en ' + daysUntil(S.docs.soat) + ' días. Si quieres, te recordamos 3 días antes.', cuando: 'hace 12 días' });
+    S.avisos.push({ t: 'Inspección', m: 'Tu inspección del ' + fmtShort(S.historial[0].fecha) + ': llantas traseras al 30 %. Te avisamos cuando toque cambiarlas.', cuando: 'hace 3 meses' });
+  })();
+
+  /* ---------- demo cliente ---------- */
+  var view = 'inicio';
+  function showView(v) { view = v; $$('.app-view').forEach(function (el) { el.classList.toggle('is-active', el.id === 'v-' + v); }); $$('.app-nav button').forEach(function (b) { b.classList.toggle('is-active', b.dataset.view === v); }); $('.screen').scrollTop = 0; }
+  $$('.app-nav button').forEach(function (b) { b.addEventListener('click', function () { showView(b.dataset.view); }); });
+
+  function renderInicio() {
+    var v = S.veh, p = proximo();
+    var hoy = ppFor(today, v.digito), man = ppFor(addDays(today, 1), v.digito);
+    var soat = docState(S.docs.soat), tec = docState(S.docs.tecno);
+    var lect = daysUntil(v.lectura);
+    var h = '<p class="greet">Hola, ' + S.nombre + '</p>';
+    h += '<div class="card"><div class="row"><div><h4>Tu vehículo</h4><div class="big">' + esc(v.modelo) + '</div></div><span class="plate">' + v.placa + '</span></div><p style="margin-top:6px">' + nf.format(v.km) + ' km <span class="muted">(lectura ' + (lect === 0 ? 'de hoy' : 'de hace ' + (-lect) + ' días') + ')</span></p></div>';
+    h += '<div class="card ' + (hoy.aplica ? 'bar-warn' : 'bar-ok') + '"><h4>Pico y placa, ' + fmtLong(today) + '</h4>';
+    h += '<div class="big ' + (hoy.aplica ? 'st-warn' : 'st-ok') + '">' + (hoy.aplica ? 'Hoy no circulas de 5 a. m. a 8 p. m.' : 'Hoy circulas libre') + '</div>';
+    h += '<p class="muted" style="font-size:.85rem;margin-top:4px">' + (hoy.motivo ? cap(hoy.motivo) + ', no aplica.' : 'Hoy aplica para placas terminadas en ' + hoy.digs[0] + ' y ' + hoy.digs[1] + '.') + ' Mañana: ' + (man.aplica ? '<span class="st st-warn">pico y placa</span>' : 'libre') + '.</p></div>';
+    h += '<div class="card bar-' + soat.cls + '"><div class="row"><div><h4>SOAT</h4><div class="st st-' + soat.cls + '">' + soat.txt + '</div></div></div></div>';
+    h += '<div class="card bar-' + tec.cls + '"><div class="row"><div><h4>Tecnomecánica</h4><div class="st st-' + tec.cls + '">' + tec.txt + '</div></div></div></div>';
+    h += '<div class="card"><h4>Próximo servicio</h4><div class="big">' + esc(p.servicio) + '</div><p style="margin-top:4px">A los ' + nf.format(p.at) + ' km. ' + (p.faltan <= 0 ? '<span class="st st-bad">Ya toca.</span>' : 'Faltan ' + nf.format(p.faltan) + ' km, alrededor del ' + fmtShort(p.fecha) + '.') + '</p>';
+    h += '<div class="chips" style="margin-top:12px"><button type="button" class="cta small" id="c-km-btn">Reportar km</button><button type="button" class="cta small ghost" id="c-ag-btn">Agendar</button></div>';
+    h += '<div id="c-km-form" style="display:none"><div class="field"><label for="c-km">Kilometraje actual</label><input id="c-km" inputmode="numeric" placeholder="' + nf.format(v.km) + '"></div><div class="chips"><button type="button" class="cta small" id="c-km-save">Guardar</button><button type="button" class="cta small ghost" id="c-km-cancel">Cancelar</button></div></div></div>';
+    $('#v-inicio').innerHTML = h;
+    $('#c-km-btn').addEventListener('click', function () { var f = $('#c-km-form'); f.style.display = f.style.display === 'none' ? 'block' : 'none'; if (f.style.display === 'block') $('#c-km').focus(); });
+    $('#c-km-cancel').addEventListener('click', function () { $('#c-km-form').style.display = 'none'; });
+    $('#c-ag-btn').addEventListener('click', function () { showView('citas'); });
+    $('#c-km-save').addEventListener('click', saveKm);
+    $('#c-km').addEventListener('keydown', function (e) { if (e.key === 'Enter') saveKm(); });
+  }
+  function saveKm() {
+    var val = parseInt(($('#c-km').value || '').replace(/[^\d]/g, ''), 10);
+    if (isNaN(val)) { toast('Escribe el kilometraje.'); return; }
+    if (val < S.veh.km) { toast('El kilometraje no puede ser menor a ' + nf.format(S.veh.km) + '.'); return; }
+    S.veh.km = val; S.veh.lectura = today;
+    var p = proximo();
+    if (p.faltan <= 500) {
+      S.avisos.unshift({ t: 'Servicio', m: (p.faltan <= 0 ? 'Tu ' + S.veh.corto + ' ya está en kilometraje de ' + p.servicio.toLowerCase() + '.' : 'Tu ' + S.veh.corto + ' está a ' + nf.format(p.faltan) + ' km del ' + p.servicio.toLowerCase() + '.') + ' ¿Agendamos? Jueves 8:00 o viernes 10:00.', cuando: 'ahora', nuevo: true });
+      talleres.k0.avisosMes++;
+      toast('Kilometraje guardado. Quedan ' + nf.format(Math.max(p.faltan, 0)) + ' km: te llegó el aviso de servicio.');
+    } else {
+      toast('Kilometraje guardado. Próximo servicio alrededor del ' + fmtShort(p.fecha) + '.');
+    }
+    renderCliente(); renderAdmin();
+  }
+  function renderHistorial() {
+    var h = '<p class="greet">Historial</p><p class="muted" style="font-size:.85rem;margin-top:4px">' + esc(S.veh.modelo) + ', ' + S.veh.placa + '. Todo lo hecho en Kilómetro 0.</p>';
+    S.historial.forEach(function (x) { h += '<div class="list-item"><strong>' + fmtFull(x.fecha) + '</strong> a los ' + nf.format(x.km) + ' km<small>' + esc(x.items.join(', ')) + '</small></div>'; });
+    $('#v-historial').innerHTML = h;
+  }
+  function nextBusinessDays(n) { var out = [], d = addDays(today, 1); while (out.length < n) { var w = d.getDay(); if (w !== 0 && w !== 6) out.push(d); d = addDays(d, 1); } return out; }
+  var citaSel = { dia: 0, hora: '8:00', motivo: 'aceite' };
+  function renderCitas() {
+    var dias = nextBusinessDays(3), horas = ['8:00', '10:00', '14:00', '16:00'];
+    var h = '<p class="greet">Citas</p>';
+    var hoyCita = citasHoy[0];
+    h += '<div class="card"><h4>Hoy</h4><div class="row"><strong>' + hoyCita.hora + '</strong><span class="tag ' + (hoyCita.estado === 'cerrada' ? 'ok' : 'amber') + '">' + (hoyCita.estado === 'cerrada' ? 'Lista' : 'En taller') + '</span></div><p style="font-size:.9rem;margin-top:4px">' + esc(hoyCita.motivo) + '</p></div>';
+    S.citasNuevas.forEach(function (c) { h += '<div class="card"><h4>Próxima</h4><div class="row"><strong>' + fmtLong(c.fecha) + ', ' + c.hora + '</strong><span class="tag ok">Confirmada</span></div><p style="font-size:.9rem;margin-top:4px">' + esc(c.motivo) + '</p></div>'; });
+    h += '<div class="card"><h4>Agendar</h4><div class="chips" id="c-dias">';
+    dias.forEach(function (d, i) { h += '<button type="button" class="chip' + (citaSel.dia === i ? ' is-on' : '') + '" data-dia="' + i + '">' + cap(fmtLong(d).replace(/ de \w+$/, '')) + '</button>'; });
+    h += '</div><div class="chips" id="c-horas">';
+    horas.forEach(function (x) { h += '<button type="button" class="chip' + (citaSel.hora === x ? ' is-on' : '') + '" data-hora="' + x + '">' + x + '</button>'; });
+    h += '</div><div class="field"><label for="c-motivo">Servicio</label><select id="c-motivo">';
+    talleres.k0.catalogo.forEach(function (s) { h += '<option value="' + s.id + '"' + (citaSel.motivo === s.id ? ' selected' : '') + '>' + esc(s.s) + '</option>'; });
+    h += '<option value="otro">Otro (lo describo en WhatsApp)</option></select></div><div class="chips"><button type="button" class="cta" id="c-confirm">Confirmar cita</button></div></div>';
+    $('#v-citas').innerHTML = h;
+    $$('#c-dias .chip').forEach(function (b) { b.addEventListener('click', function () { citaSel.dia = parseInt(b.dataset.dia, 10); renderCitas(); }); });
+    $$('#c-horas .chip').forEach(function (b) { b.addEventListener('click', function () { citaSel.hora = b.dataset.hora; renderCitas(); }); });
+    $('#c-motivo').addEventListener('change', function () { citaSel.motivo = this.value; });
+    $('#c-confirm').addEventListener('click', function () {
+      var d = dias[citaSel.dia];
+      var m = citaSel.motivo === 'otro' ? 'Revisión general' : talleres.k0.catalogo.filter(function (s) { return s.id === citaSel.motivo; })[0].s;
+      S.citasNuevas.push({ fecha: d, hora: citaSel.hora, motivo: m, svc: citaSel.motivo });
+      S.avisos.unshift({ t: 'Cita', m: 'Cita confirmada: ' + fmtLong(d) + ' a las ' + citaSel.hora + ', ' + m.toLowerCase() + '. Te recordamos el día anterior.', cuando: 'ahora', nuevo: true });
+      talleres.k0.avisosMes++;
+      toast('Cita confirmada. Ya aparece en el tablero del taller.');
+      renderCliente(); renderTaller(); renderAdmin();
+    });
+  }
+  function renderAvisos() {
+    var man = ppFor(addDays(today, 1), S.veh.digito);
+    var h = '<p class="greet">Avisos</p>';
+    if (man.aplica) h += '<div class="notif is-new"><strong>Pico y placa</strong><br>Mañana tu placa ' + S.veh.placa + ' tiene pico y placa de 5 a. m. a 8 p. m.<small>Programado para hoy a las 7 p. m.</small></div>';
+    S.avisos.forEach(function (a) { h += '<div class="notif' + (a.nuevo ? ' is-new' : '') + '"><strong>' + esc(a.t) + '</strong><br>' + esc(a.m) + '<small>' + esc(a.cuando) + '</small></div>'; });
+    $('#v-avisos').innerHTML = h;
+  }
+  function renderCliente() { renderInicio(); renderHistorial(); renderCitas(); renderAvisos(); }
+
+  /* ---------- demo taller ---------- */
+  var citasHoy = [
+    { id: 'c1', hora: '8:00', cliente: 'Carolina', vehiculo: 'Mazda 3 Touring 2021', placa: 'GHS 483', motivo: 'Cambio de aceite y revisión de frenos', km: 47800, svc: ['aceite', 'frenos'], estado: 'pendiente', esCliente: true },
+    { id: 'c2', hora: '10:30', cliente: 'Andrés Pineda', vehiculo: 'Renault Duster 2019', placa: 'KJT 921', motivo: 'Ruido al frenar', km: 88400, svc: ['frenos'], estado: 'pendiente' },
+    { id: 'c3', hora: '14:00', cliente: 'Transportes Río (flota)', vehiculo: 'Chevrolet NPR 2022', placa: 'SVP 034', motivo: 'Mantenimiento preventivo', km: 132900, svc: ['aceite', 'aire'], estado: 'pendiente', flota: true }
+  ];
+  var INSP = ['Frenos', 'Llantas', 'Batería', 'Luces', 'Fugas'];
+  var ordenes = {}, ordenAbierta = null;
+  function orden(id) {
+    if (!ordenes[id]) {
+      var c = citasHoy.filter(function (x) { return x.id === id; })[0];
+      var checks = {}; talleres.k0.catalogo.forEach(function (s) { checks[s.id] = c.svc.indexOf(s.id) >= 0; });
+      var insp = {}; INSP.forEach(function (i) { insp[i] = { estado: 'Bien', foto: false }; });
+      if (id === 'c1') { insp['Llantas'] = { estado: 'Atención', foto: true }; }
+      if (id === 'c2') { insp['Frenos'] = { estado: 'Urgente', foto: true }; }
+      ordenes[id] = { km: c.esCliente ? Math.max(c.km, S.veh.km) : c.km, checks: checks, insp: insp, cot: 'no', aprobados: 0 };
+    }
+    return ordenes[id];
+  }
+  function renderTaller() {
+    var abiertas = citasHoy.filter(function (c) { return c.estado !== 'cerrada'; }).length;
+    var pend = Object.keys(ordenes).filter(function (k) { return ordenes[k].cot === 'enviada'; }).length;
+    $('#t-kpis').innerHTML = '<div class="kpi"><div class="n">' + citasHoy.length + '</div><div class="l">citas hoy</div></div><div class="kpi"><div class="n">' + abiertas + '</div><div class="l">órdenes abiertas</div></div><div class="kpi"><div class="n">' + pend + '</div><div class="l">aprobaciones pendientes</div></div><div class="kpi"><div class="n">' + S.cerradasHoy + '</div><div class="l">cerradas hoy</div></div>';
+    var h = '';
+    citasHoy.forEach(function (c) {
+      var o = ordenes[c.id];
+      var tag = c.estado === 'cerrada' ? '<span class="tag ok">Cerrada</span>' : (o && o.cot === 'aprobada' ? '<span class="tag amber">Aprobada</span>' : (o && o.cot === 'enviada' ? '<span class="tag">Esperando aprobación</span>' : (o ? '<span class="tag amber">En taller</span>' : '<span class="tag">Programada</span>')));
+      h += '<div class="cita' + (ordenAbierta === c.id ? ' is-open' : '') + '"><div class="time">' + c.hora + '</div><div><strong>' + esc(c.cliente) + '</strong>' + (c.flota ? ' <span class="tag">Flota</span>' : '') + '<small>' + esc(c.vehiculo) + ', ' + c.placa + '. ' + esc(c.motivo) + '</small></div><div>' + tag + ' <button type="button" class="cta small ghost" data-open="' + c.id + '" style="margin-left:6px">' + (ordenAbierta === c.id ? 'Abierta' : 'Abrir') + '</button></div></div>';
+    });
+    $('#t-citas').innerHTML = h;
+    $$('[data-open]').forEach(function (b) { b.addEventListener('click', function () { ordenAbierta = b.dataset.open; orden(ordenAbierta); renderTaller(); }); });
+    var px = '';
+    S.citasNuevas.forEach(function (c) { px += '<div class="cita"><div class="time">' + c.hora + '</div><div><strong>' + S.nombre + '</strong><small>' + esc(S.veh.modelo) + ', ' + S.veh.placa + '. ' + esc(c.motivo) + '. ' + cap(fmtLong(c.fecha)) + '</small></div><div><span class="tag ok">Desde la app</span></div></div>'; });
+    $('#t-proximas').innerHTML = px || '<p class="empty">Las citas que el cliente agende desde su app aparecen aquí.</p>';
+    renderOrden();
+  }
+  function renderOrden() {
+    var box = $('#t-orden');
+    if (!ordenAbierta) { box.innerHTML = '<p class="empty">Abre una cita para ver su orden de trabajo.</p>'; return; }
+    var c = citasHoy.filter(function (x) { return x.id === ordenAbierta; })[0], o = orden(c.id);
+    var cerrada = c.estado === 'cerrada';
+    var h = '<h3>Orden de trabajo, ' + esc(c.cliente) + '</h3><p class="status-line">' + esc(c.vehiculo) + ', ' + c.placa + '. Motivo: ' + esc(c.motivo) + '.</p>';
+    h += '<div class="field" style="max-width:220px"><label for="o-km">Kilometraje en recepción</label><input id="o-km" inputmode="numeric" value="' + nf.format(o.km) + '"' + (cerrada ? ' disabled' : '') + '></div>';
+    h += '<div class="order-grid"><div><h3 style="margin-top:14px">Servicios</h3>';
+    talleres.k0.catalogo.forEach(function (s) { h += '<label class="svc"><input type="checkbox" data-svc="' + s.id + '"' + (o.checks[s.id] ? ' checked' : '') + (cerrada || o.cot !== 'no' ? ' disabled' : '') + '><span>' + esc(s.s) + '</span><span class="price">' + nf.format(s.precio) + '</span></label>'; });
+    h += '</div><div><h3 style="margin-top:14px">Inspección digital</h3>';
+    INSP.forEach(function (i) { var x = o.insp[i]; h += '<div class="insp"><span>' + i + '</span><select data-insp="' + i + '"' + (cerrada ? ' disabled' : '') + '>' + ['Bien', 'Atención', 'Urgente'].map(function (v) { return '<option' + (x.estado === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select><button type="button" class="photo' + (x.foto ? ' is-on' : '') + '" data-foto="' + i + '"' + (cerrada ? ' disabled' : '') + '>' + (x.foto ? 'foto' : '+ foto') + '</button></div>'; });
+    h += '</div></div>';
+    var n = Object.keys(o.checks).filter(function (k) { return o.checks[k]; }).length;
+    var total = talleres.k0.catalogo.filter(function (s) { return o.checks[s.id]; }).reduce(function (a, s) { return a + s.precio; }, 0);
+    h += '<div class="order-actions">';
+    if (cerrada) { h += '<span class="tag ok">Orden cerrada</span><span class="status-line">' + esc(c.cliente) + ' fue notificado por WhatsApp y el historial quedó actualizado.</span>'; }
+    else {
+      h += '<button type="button" class="cta ghost" id="o-cot"' + (o.cot !== 'no' || n === 0 ? ' disabled' : '') + '>Enviar cotización por WhatsApp</button>';
+      h += '<button type="button" class="cta" id="o-close"' + (o.cot !== 'aprobada' ? ' disabled' : '') + '>Validar y cerrar orden</button>';
+      h += '<span class="status-line" id="o-status">' + (o.cot === 'no' ? n + ' servicios, ' + nf.format(total) + ' de referencia.' : o.cot === 'enviada' ? 'Cotización enviada a ' + esc(c.cliente) + '. Esperando aprobación por WhatsApp.' : esc(c.cliente) + ' aprobó ' + o.aprobados + ' de ' + n + ' desde WhatsApp. Puedes cerrar.') + '</span>';
+    }
+    h += '</div>';
+    box.innerHTML = h;
+    if (cerrada) return;
+    $('#o-km').addEventListener('change', function () { var v = parseInt(this.value.replace(/[^\d]/g, ''), 10); if (!isNaN(v)) o.km = v; this.value = nf.format(o.km); });
+    $$('[data-svc]').forEach(function (cb) { cb.addEventListener('change', function () { o.checks[cb.dataset.svc] = cb.checked; renderOrden(); }); });
+    $$('[data-insp]').forEach(function (sel) { sel.addEventListener('change', function () { o.insp[sel.dataset.insp].estado = sel.value; }); });
+    $$('[data-foto]').forEach(function (b) { b.addEventListener('click', function () { o.insp[b.dataset.foto].foto = !o.insp[b.dataset.foto].foto; renderOrden(); }); });
+    var cot = $('#o-cot'); if (cot) cot.addEventListener('click', function () {
+      o.cot = 'enviada'; renderTaller();
+      setTimeout(function () { o.cot = 'aprobada'; o.aprobados = Object.keys(o.checks).filter(function (k) { return o.checks[k]; }).length; toast(c.cliente + ' aprobó la cotización desde WhatsApp.'); renderTaller(); }, 1700);
+    });
+    var cl = $('#o-close'); if (cl) cl.addEventListener('click', function () {
+      c.estado = 'cerrada'; S.cerradasHoy++; talleres.k0.avisosMes++;
+      var items = talleres.k0.catalogo.filter(function (s) { return o.checks[s.id]; }).map(function (s) { return s.s; });
+      if (c.esCliente) {
+        S.veh.km = Math.max(S.veh.km, o.km); S.veh.lectura = today;
+        if (o.checks.aceite) S.ultimoAceiteKm = o.km;
+        S.historial.unshift({ fecha: today, km: o.km, items: items });
+        var p = proximo();
+        S.avisos.unshift({ t: 'Orden cerrada', m: 'Tu ' + S.veh.corto + ' quedó listo. Hicimos: ' + items.join(', ').toLowerCase() + '. Próximo ' + p.servicio.toLowerCase() + ' a los ' + nf.format(p.at) + ' km, alrededor del ' + fmtShort(p.fecha) + '. ¿Cómo te fue con nosotros?', cuando: 'ahora', nuevo: true });
+        toast('Orden cerrada. Carolina fue notificada por WhatsApp y su historial se actualizó.');
+      } else { toast('Orden cerrada. ' + c.cliente + ' fue notificado por WhatsApp.'); }
+      renderTaller(); renderCliente(); renderAdmin();
+    });
+  }
+
+  /* ---------- demo administrador ---------- */
+  function T() { return talleres[tallerActual]; }
+  $$('#a-seg button').forEach(function (b) { b.addEventListener('click', function () { tallerActual = b.dataset.taller; $$('#a-seg button').forEach(function (x) { x.classList.toggle('is-on', x === b); }); renderAdmin(); }); });
+  function renderChart() {
+    var data = T().chart, max = Math.max.apply(null, data.map(function (d) { return d[1]; })), w = 520, h = 220, bw = 84, gap = (w - 40 - bw * data.length) / (data.length - 1), base = 180;
+    var s = '';
+    data.forEach(function (d, i) {
+      var x = 20 + i * (bw + gap), bh = Math.round((d[1] / max) * 130), y = base - bh;
+      s += '<rect class="' + (i === 1 ? 'b2' : 'b') + '" x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="3"></rect>';
+      s += '<text class="v" x="' + (x + bw / 2) + '" y="' + (y - 8) + '" text-anchor="middle">' + d[1] + '</text>';
+      s += '<text x="' + (x + bw / 2) + '" y="' + (base + 22) + '" text-anchor="middle">' + d[0] + '</text>';
+    });
+    $('#a-chart').innerHTML = s;
+    $('#a-chart-note').textContent = tallerActual === 'k0' ? 'Pico y placa, en gris, entra con la app del cliente en Fase 2; el resto va por WhatsApp desde la Fase 1.' : 'Un taller más pequeño, mismas condiciones, otros volúmenes.';
+  }
+  function renderAdmin() {
+    var t = T();
+    $('#a-kpis').innerHTML = '<div class="kpi"><div class="n">' + nf.format(t.clientes) + '</div><div class="l">clientes activos</div></div><div class="kpi"><div class="n">' + t.vuelven + ' %</div><div class="l">vuelven a tiempo</div></div><div class="kpi"><div class="n">' + nf.format(t.avisosMes) + '</div><div class="l">avisos este mes</div></div><div class="kpi"><div class="n">' + t.citasPorAviso + '</div><div class="l">citas generadas por avisos</div></div>';
+    renderChart();
+    var r = '';
+    REGLAS.forEach(function (x, i) { r += '<div class="rule-row"><button type="button" class="switch' + (t.reglas[i] ? ' is-on' : '') + '" data-regla="' + i + '" role="switch" aria-checked="' + (t.reglas[i] ? 'true' : 'false') + '" aria-label="' + esc(x[0]) + '"></button><div class="txt"><b>' + esc(x[0]) + '</b><small>' + esc(x[1]) + '</small></div></div>'; });
+    $('#a-rules').innerHTML = r;
+    $$('[data-regla]').forEach(function (b) { b.addEventListener('click', function () { var i = parseInt(b.dataset.regla, 10); t.reglas[i] = !t.reglas[i]; renderAdmin(); toast(REGLAS[i][0] + (t.reglas[i] ? ' activada' : ' desactivada') + ' para ' + t.nombre + '.'); }); });
+    var c = '';
+    t.catalogo.forEach(function (s, i) { c += '<tr><td>' + esc(s.s) + '</td><td><input inputmode="numeric" data-cat-km="' + i + '" value="' + nf.format(s.km) + '"></td><td><input inputmode="numeric" data-cat-m="' + i + '" value="' + s.meses + '"></td><td style="font-variant-numeric:tabular-nums">' + nf.format(s.precio) + '</td></tr>'; });
+    $('#a-cat').innerHTML = c;
+    $$('[data-cat-km]').forEach(function (inp) { inp.addEventListener('change', function () {
+      var i = parseInt(inp.dataset.catKm, 10), v = parseInt(inp.value.replace(/[^\d]/g, ''), 10);
+      if (isNaN(v) || v < 500) { inp.value = nf.format(t.catalogo[i].km); return; }
+      t.catalogo[i].km = v; inp.value = nf.format(v);
+      if (tallerActual === 'k0' && i === 0) { var p = proximo(); renderCliente(); toast('Intervalo actualizado. El próximo cambio de aceite de Carolina ahora es a los ' + nf.format(p.at) + ' km.'); }
+      else { toast('Intervalo actualizado para ' + t.nombre + '.'); }
+      renderTpl();
+    }); });
+    $$('[data-cat-m]').forEach(function (inp) { inp.addEventListener('change', function () { var i = parseInt(inp.dataset.catM, 10), v = parseInt(inp.value.replace(/[^\d]/g, ''), 10); if (!isNaN(v) && v > 0) t.catalogo[i].meses = v; inp.value = t.catalogo[i].meses; }); });
+    renderTpl();
+  }
+  function fill(tpl) {
+    var p = proximo();
+    return tpl.replace(/\{(\w+)\}/g, function (_, k) {
+      return { nombre: S.nombre, vehiculo: S.veh.corto, placa: S.veh.placa, km_faltan: nf.format(Math.max(p.faltan, 0)), servicio: p.servicio.toLowerCase(), documento: 'SOAT', fecha: fmtFull(S.docs.soat), dias: String(daysUntil(S.docs.soat)) }[k] || '{' + k + '}';
+    });
+  }
+  function renderTpl() {
+    var t = T(), keys = [['servicio', 'Aviso de servicio por kilometraje'], ['documento', 'Documento por vencer'], ['pico', 'Pico y placa de mañana']];
+    var h = '<p class="status-line">Variables disponibles: {nombre}, {vehiculo}, {placa}, {km_faltan}, {servicio}, {documento}, {fecha}, {dias}. Debajo de cada plantilla, la vista previa con los datos de Carolina.</p>';
+    keys.forEach(function (k) { h += '<div class="field"><label>' + k[1] + '</label><textarea data-tpl="' + k[0] + '">' + esc(t.plantillas[k[0]]) + '</textarea><div class="prev" id="prev-' + k[0] + '">' + esc(fill(t.plantillas[k[0]])) + '</div></div>'; });
+    $('#a-tpl').innerHTML = h;
+    $$('[data-tpl]').forEach(function (ta) { ta.addEventListener('input', function () { t.plantillas[ta.dataset.tpl] = ta.value; $('#prev-' + ta.dataset.tpl).textContent = fill(ta.value); }); });
+  }
+
+  renderCliente(); renderTaller(); renderAdmin();
+})();
+</script>
+</body>
+</html>
